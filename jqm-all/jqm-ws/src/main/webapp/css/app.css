@@ -37,3 +37,27 @@ html,body {
 .ngViewport.ng-scope {
 	overflow-x: hidden;
 }
+
+/* SVG Elements */
+g > text {
+  font-weight: 300;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serf;
+  font-size: 28px;
+}
+ 
+.node rect {
+  stroke: #999;
+  fill: #fff;
+  stroke-width: 1.5px;
+}
+ 
+.edgePath path {
+  stroke: #333;
+  stroke-width: 3px;
+}
+
+.cluster > rect {
+	fill: lime;
+	line-height: 2px;
+	color: red;
+}
