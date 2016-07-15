@@ -80,6 +80,9 @@ public class JobInstance implements Serializable
     @ManyToOne(targetEntity = com.enioka.jqm.jpamodel.Node.class, fetch = FetchType.LAZY)
     @JoinColumn(name = "node_id")
     private Node node;
+    
+    @ManyToOne(optional=false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Profile profile;
 
     @Column(name = "sendEmail")
     private String email;
@@ -452,5 +455,21 @@ public class JobInstance implements Serializable
     public void setAttributionDate(Calendar attributionDate)
     {
         this.attributionDate = attributionDate;
+    }
+    
+    /**
+     * This object belongs to a specific Profile. This allows to partition the global JQM cluster in multiple logical environments.
+     */
+    public Profile getProfile()
+    {
+        return profile;
+    }
+
+    /**
+     * See {@link #getProfile()}
+     */
+    public void setProfile(Profile profile)
+    {
+        this.profile = profile;
     }
 }

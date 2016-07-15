@@ -31,6 +31,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
@@ -73,6 +74,9 @@ public class JndiObjectResource implements Serializable
     private String template = null;
 
     private Boolean singleton = false;
+    
+    @ManyToOne(optional=false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private Profile profile;
 
     @Version
     @Temporal(TemporalType.TIMESTAMP)
@@ -236,5 +240,21 @@ public class JndiObjectResource implements Serializable
     protected void setLastModified(Calendar lastModified)
     {
         this.lastModified = lastModified;
+    }
+    
+    /**
+     * This object belongs to a specific Profile. This allows to partition the global JQM cluster in multiple logical environments.
+     */
+    public Profile getProfile()
+    {
+        return profile;
+    }
+
+    /**
+     * See {@link #getProfile()}
+     */
+    public void setProfile(Profile profile)
+    {
+        this.profile = profile;
     }
 }

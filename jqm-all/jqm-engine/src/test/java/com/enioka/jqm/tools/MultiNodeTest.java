@@ -298,21 +298,21 @@ public class MultiNodeTest extends JqmBaseTest
     {
         long size = 1000;
 
-        Queue q = CreationTools.initQueue("testqueue", "super test queue", 42, em, false);
+        Queue q = CreationTools.initQueue("testqueue", "super test queue", 42, em, false, TestHelpers.p);
 
         CreationTools.createJobDef(null, true, "pyl.EngineApiSendMsg", null, "jqm-tests/jqm-test-pyl/target/test.jar", q, 42, "appliname",
                 null, "Franquin", "ModuleMachin", "other", "other", false, em);
 
-        Node n0 = CreationTools.createNode("n0", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n1 = CreationTools.createNode("n1", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n2 = CreationTools.createNode("n2", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n3 = CreationTools.createNode("n3", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n4 = CreationTools.createNode("n4", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n5 = CreationTools.createNode("n5", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n6 = CreationTools.createNode("n6", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n7 = CreationTools.createNode("n7", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n8 = CreationTools.createNode("n8", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        Node n9 = CreationTools.createNode("n9", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
+        Node n0 = CreationTools.createNode("n0", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n1 = CreationTools.createNode("n1", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n2 = CreationTools.createNode("n2", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n3 = CreationTools.createNode("n3", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n4 = CreationTools.createNode("n4", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n5 = CreationTools.createNode("n5", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n6 = CreationTools.createNode("n6", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n7 = CreationTools.createNode("n7", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n8 = CreationTools.createNode("n8", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
+        Node n9 = CreationTools.createNode("n9", 0, "./target/outputfiles/", "./../", "./target/tmp", TestHelpers.p, em);
 
         TestHelpers.setNodesLogLevel("INFO", em);
 

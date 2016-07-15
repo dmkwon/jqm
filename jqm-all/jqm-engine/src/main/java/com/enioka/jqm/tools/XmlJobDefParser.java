@@ -39,6 +39,7 @@ import org.w3c.dom.NodeList;
 
 import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobDefParameter;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 
 class XmlJobDefParser
@@ -57,7 +58,7 @@ class XmlJobDefParser
      * @param em
      * @throws JqmEngineException
      */
-    static void parse(String path, EntityManager em) throws JqmEngineException
+    static void parse(String path, EntityManager em, Profile intoProfile) throws JqmEngineException
     {
         // Argument checks
         jqmlogger.trace(path);
@@ -139,6 +140,7 @@ class XmlJobDefParser
                                 queue = new Queue();
                                 queue.setDescription("Created from a jobdef import. Description should be set later");
                                 queue.setName(qname);
+                                queue.setProfile(intoProfile);
                                 em.persist(queue);
                                 createdQueues.put(qname, queue);
                             }
@@ -213,6 +215,9 @@ class XmlJobDefParser
                         jdp.setValue(prmElement.getElementsByTagName("value").item(0).getTextContent());
                         jd.getParameters().add(jdp);
                     }
+                    
+                    // Profile
+                    jd.setProfile(intoProfile);
 
                     em.persist(jd);
                     jqmlogger.info("Imported application " + jd.getApplicationName());

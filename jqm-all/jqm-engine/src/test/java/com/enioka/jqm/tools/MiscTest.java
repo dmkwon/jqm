@@ -83,9 +83,9 @@ public class MiscTest extends JqmBaseTest
     public void testJobWithPersistenceUnit() throws Exception
     {
         CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
         CreationTools.createDatabaseProp("jdbc/jqm2", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql://localhost/testdbengine", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
 
         CreationTools.createJobDef(null, true, "App", null, "jqm-tests/jqm-test-em/target/test.jar", TestHelpers.qVip, 42, "jqm-test-em",
                 null, "Franquin", "ModuleMachin", "other", "other", false, em);
@@ -104,7 +104,7 @@ public class MiscTest extends JqmBaseTest
     public void testJobWithPersistenceUnitAndEngineApi() throws Exception
     {
         CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
         JqmSimpleTest.create(em, "pyl.CompatHibApi", "jqm-test-pyl-hibapi").expectOk(2).run(this);
     }
 
@@ -112,9 +112,9 @@ public class MiscTest extends JqmBaseTest
     public void testJobWithPersistenceUnitAndEngineApiAndXmlParams() throws Exception
     {
         CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
         CreationTools.createDatabaseProp("jdbc/jqm2", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql://localhost/testdbengine", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
 
         Main.main(new String[] { "-importjobdef", "target/payloads/jqm-test-xml/xmlstop.xml" });
 
@@ -190,6 +190,7 @@ public class MiscTest extends JqmBaseTest
         ji.setNode(TestHelpers.node);
         ji.setQueue(TestHelpers.qVip);
         ji.setState(State.RUNNING);
+        ji.setProfile(TestHelpers.p);
         em.persist(ji);
         em.getTransaction().commit();
 
@@ -218,6 +219,7 @@ public class MiscTest extends JqmBaseTest
         ji.setNode(TestHelpers.node);
         ji.setQueue(TestHelpers.qVip);
         ji.setState(State.ATTRIBUTED);
+        ji.setProfile(TestHelpers.p);
         em.persist(ji);
         em.getTransaction().commit();
 
@@ -251,26 +253,20 @@ public class MiscTest extends JqmBaseTest
         // Scenario is: 5 jobs in queue. 3 should run. 2 are then killed - 3 should still run.
         Thread.sleep(3000);
 
-        Assert.assertEquals(3,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
-        Assert.assertEquals(
-                2,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
+        Assert.assertEquals(3, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
+        Assert.assertEquals(2, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
 
         JqmClientFactory.getClient().killJob(i1);
         JqmClientFactory.getClient().killJob(i2);
 
         Thread.sleep(2000);
 
-        Assert.assertEquals(3,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
-        Assert.assertEquals(
-                0,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
+        Assert.assertEquals(3, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
+        Assert.assertEquals(0, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
 
         JqmClientFactory.getClient().killJob(i3);
         JqmClientFactory.getClient().killJob(i4);
@@ -304,26 +300,20 @@ public class MiscTest extends JqmBaseTest
         // Scenario is: 5 jobs in queue. 3 should run. 2 are then killed - 3 should still run.
         Thread.sleep(3000);
 
-        Assert.assertEquals(3,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
-        Assert.assertEquals(
-                2,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
+        Assert.assertEquals(3, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
+        Assert.assertEquals(2, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
 
         JqmClientFactory.getClient().killJob(i1);
         JqmClientFactory.getClient().killJob(i2);
 
         Thread.sleep(2000);
 
-        Assert.assertEquals(3,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
-        Assert.assertEquals(
-                0,
-                Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
-                        .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
+        Assert.assertEquals(3, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.RUNNING).run().size());
+        Assert.assertEquals(0, Query.create().setQueryLiveInstances(true).setQueryHistoryInstances(false)
+                .addStatusFilter(com.enioka.jqm.api.State.SUBMITTED).run().size());
 
         JqmClientFactory.getClient().killJob(i3);
         JqmClientFactory.getClient().killJob(i4);

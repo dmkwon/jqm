@@ -34,6 +34,7 @@ import org.apache.log4j.Logger;
 
 import com.enioka.jqm.api.JobInstance;
 import com.enioka.jqm.api.JqmClientFactory;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.RRole;
 import com.enioka.jqm.jpamodel.RUser;
 
@@ -86,8 +87,8 @@ public class Main
         Option o00 = OptionBuilder.withArgName("nodeName").hasArg().withDescription("name of the JQM node to start").isRequired()
                 .create("startnode");
         Option o01 = OptionBuilder.withDescription("display help").withLongOpt("help").create("h");
-        Option o11 = OptionBuilder.withArgName("applicationname").hasArg().withDescription("name of the application to launch")
-                .isRequired().create("enqueue");
+        Option o11 = OptionBuilder.withArgName("applicationname").hasArg().withDescription("name of the application to launch").isRequired()
+                .create("enqueue");
         Option o21 = OptionBuilder.withArgName("xmlpath").hasArg().withDescription("path of the XML configuration file to import")
                 .isRequired().create("importjobdef");
         Option o31 = OptionBuilder.withArgName("xmlpath").hasArg().withDescription("export all queue definitions into an XML file")
@@ -116,6 +117,7 @@ public class Main
                 .withDescription("resource parameter file to use. Default is resources.xml").withLongOpt("resources").create("p");
         Option o141 = OptionBuilder.withArgName("login,password,role1,role2,...").hasArgs(Option.UNLIMITED_VALUES).withValueSeparator(',')
                 .withDescription("Create or update a JQM account. Roles must exist beforehand.").create("U");
+        Option o151 = OptionBuilder.withArgName("profile").hasArg().withDescription("The profile in which to work. Can be ignored if only one profile exists").create("x");
 
         Options options = new Options();
         OptionGroup og1 = new OptionGroup();
@@ -134,6 +136,7 @@ public class Main
         og1.addOption(o111);
         og1.addOption(o121);
         og1.addOption(o141);
+        og1.addOption(o151);
         options.addOptionGroup(og1);
         OptionGroup og2 = new OptionGroup();
         og2.addOption(o131);
@@ -171,7 +174,7 @@ public class Main
             // Import XML
             else if (line.getOptionValue(o21.getOpt()) != null)
             {
-                importJobDef(line.getOptionValue(o21.getOpt()));
+                importJobDef(line.getOptionValue(o21.getOpt()), line.getOptionValue(o151.getOpt()));
             }
             // Start engine
             else if (line.getOptionValue(o00.getOpt()) != null)
@@ -186,7 +189,7 @@ public class Main
             // Import queues
             else if (line.getOptionValue(o51.getOpt()) != null)
             {
-                importQueues(line.getOptionValue(o51.getOpt()));
+                importQueues(line.getOptionValue(o51.getOpt()), line.getOptionValue(o151.getOpt()));
             }
             // Create node
             else if (line.getOptionValue(o61.getOpt()) != null)
@@ -248,29 +251,58 @@ public class Main
         jqmlogger.info("Status is: " + JqmClientFactory.getClient().getJob(id).getState());
     }
 
-    private static void importJobDef(String xmlpath)
+    private static void importJobDef(String xmlpath, String profileName)
     {
+        EntityManager em = null;
+        Profile p = null;
         try
         {
-            EntityManager em = Helpers.getNewEm();
+            em = Helpers.getNewEm();
+
+            if (profileName == null || profileName.isEmpty())
+            {
+                if (em.createQuery("SELECT COUNT(p) FROM Profile p", Long.class).getSingleResult() != 1)
+                {
+                    jqmlogger.fatal(
+                            "Trying to import a deployment descriptor wihtout specifying destination profile is only possible when there is only one profile");
+                    return;
+                }
+                p = em.createQuery("SELECT p FROM Profile p", Profile.class).getSingleResult();
+            }
+            else
+            {
+                try
+                {
+                    p = em.createQuery("SELECT p FROM Profile p WHERE p.name=:n", Profile.class).setParameter("n", profileName)
+                            .getSingleResult();
+                }
+                catch (NoResultException ex)
+                {
+                    jqmlogger.fatal("There is no profile named " + profileName);
+                    return;
+                }
+            }
+
             if (em.createQuery("SELECT q FROM Queue q WHERE q.defaultQueue = true").getResultList().size() != 1)
             {
-                jqmlogger
-                        .fatal("Cannot import a Job Definition when there are no queues defined. Create at least an engine first to create one");
-                em.close();
+                jqmlogger.fatal(
+                        "Cannot import a Job Definition when there are no queues defined. Create at least an engine first to create one");
                 return;
             }
 
             String[] pathes = xmlpath.split(",");
             for (String path : pathes)
             {
-                XmlJobDefParser.parse(path, em);
+                XmlJobDefParser.parse(path, em, p);
             }
-            em.close();
         }
         catch (Exception e)
         {
             throw new JqmRuntimeException("Could not import file", e);
+        }
+        finally
+        {
+            Helpers.closeQuietly(em);
         }
     }
 
@@ -340,13 +372,39 @@ public class Main
         }
     }
 
-    private static void importQueues(String xmlPath)
+    private static void importQueues(String xmlPath, String profileName)
     {
         EntityManager em = null;
+        Profile p = null;
         try
         {
             em = Helpers.getNewEm();
-            XmlQueueParser.parse(xmlPath, em);
+            
+            if (profileName == null || profileName.isEmpty())
+            {
+                if (em.createQuery("SELECT COUNT(p) FROM Profile p", Long.class).getSingleResult() != 1)
+                {
+                    jqmlogger.fatal(
+                            "Trying to import a queue descriptor without specifying destination profile is only possible when there is only one profile");
+                    return;
+                }
+                p = em.createQuery("SELECT p FROM Profile p", Profile.class).getSingleResult();
+            }
+            else
+            {
+                try
+                {
+                    p = em.createQuery("SELECT p FROM Profile p WHERE p.name=:n", Profile.class).setParameter("n", profileName)
+                            .getSingleResult();
+                }
+                catch (NoResultException ex)
+                {
+                    jqmlogger.fatal("There is no profile named " + profileName);
+                    return;
+                }
+            }
+            
+            XmlQueueParser.parse(xmlPath, p, em);
         }
         catch (Exception ex)
         {
@@ -365,9 +423,8 @@ public class Main
         {
             em = Helpers.getNewEm();
             em.getTransaction().begin();
-            RRole r = Helpers.createRoleIfMissing(em, "config admin",
-                    "can read and write all configuration, except security configuration", "node:*", "queue:*", "qmapping:*", "jndi:*",
-                    "prm:*", "jd:*");
+            RRole r = Helpers.createRoleIfMissing(em, "config admin", "can read and write all configuration, except security configuration",
+                    "node:*", "queue:*", "qmapping:*", "jndi:*", "prm:*", "jd:*");
 
             RUser u = Helpers.createUserIfMissing(em, "root", "all powerfull user", r);
             u.setPassword(password);
@@ -399,7 +456,8 @@ public class Main
             Helpers.setSingleParam("enableInternalPki", "true", em);
 
             em.getTransaction().begin();
-            em.createQuery("UPDATE Node n set n.loapApiSimple = true, n.loadApiClient = true, n.loadApiAdmin = true, n.dns=:n").setParameter("n", "0.0.0.0").executeUpdate();
+            em.createQuery("UPDATE Node n set n.loapApiSimple = true, n.loadApiClient = true, n.loadApiAdmin = true, n.dns=:n")
+                    .setParameter("n", "0.0.0.0").executeUpdate();
             em.getTransaction().commit();
             em.close();
         }

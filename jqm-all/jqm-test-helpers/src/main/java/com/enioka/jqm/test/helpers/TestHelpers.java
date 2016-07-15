@@ -38,6 +38,7 @@ import com.enioka.jqm.jpamodel.GlobalParameter;
 import com.enioka.jqm.jpamodel.History;
 import com.enioka.jqm.jpamodel.JndiObjectResource;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.RUser;
 
 public class TestHelpers
@@ -45,6 +46,7 @@ public class TestHelpers
     public static Logger jqmlogger = Logger.getLogger(TestHelpers.class);
     public static JndiObjectResource db = null;
 
+    public static Profile p;
     public static com.enioka.jqm.jpamodel.Queue qVip, qNormal, qSlow, qVip2, qNormal2, qSlow2, qVip3, qNormal3, qSlow3;
     public static Node node, node2, node3, nodeMix, nodeMix2;
 
@@ -54,8 +56,9 @@ public class TestHelpers
 
     public static void createTestData(EntityManager em)
     {
+        p = CreationTools.createProfile(em, "profile1", "test profile 1");
         db = CreationTools.createDatabaseProp("jdbc/marsu", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdb", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
 
         TestHelpers.gpCentral = CreationTools.createGlobalParameter("mavenRepo", "http://repo1.maven.org/maven2/", em);
         TestHelpers.gpCentral = CreationTools.createGlobalParameter("defaultConnection", "jdbc/marsu", em);
@@ -67,23 +70,23 @@ public class TestHelpers
         TestHelpers.gpCentral = CreationTools.createGlobalParameter("enableWsApiAuth", "true", em);
         TestHelpers.gpCentral = CreationTools.createGlobalParameter("disableVerboseStartup", "true", em);
 
-        TestHelpers.qVip = CreationTools.initQueue("VIPQueue", "Queue for the winners", 42, em, true);
-        TestHelpers.qNormal = CreationTools.initQueue("NormalQueue", "Queue for the ordinary job", 7, em);
-        TestHelpers.qSlow = CreationTools.initQueue("SlowQueue", "Queue for the bad guys", 3, em);
+        TestHelpers.qVip = CreationTools.initQueue("VIPQueue", "Queue for the winners", 42, em, true, p);
+        TestHelpers.qNormal = CreationTools.initQueue("NormalQueue", "Queue for the ordinary job", 7, em, p);
+        TestHelpers.qSlow = CreationTools.initQueue("SlowQueue", "Queue for the bad guys", 3, em, p);
 
-        TestHelpers.qVip2 = CreationTools.initQueue("VIPQueue2", "Queue for the winners2", 42, em);
-        TestHelpers.qNormal2 = CreationTools.initQueue("NormalQueue2", "Queue for the ordinary job2", 7, em);
-        TestHelpers.qSlow2 = CreationTools.initQueue("SlowQueue2", "Queue for the bad guys2", 3, em);
+        TestHelpers.qVip2 = CreationTools.initQueue("VIPQueue2", "Queue for the winners2", 42, em, p);
+        TestHelpers.qNormal2 = CreationTools.initQueue("NormalQueue2", "Queue for the ordinary job2", 7, em, p);
+        TestHelpers.qSlow2 = CreationTools.initQueue("SlowQueue2", "Queue for the bad guys2", 3, em, p);
 
-        TestHelpers.qVip3 = CreationTools.initQueue("VIPQueue3", "Queue for the winners3", 42, em);
-        TestHelpers.qNormal3 = CreationTools.initQueue("NormalQueue3", "Queue for the ordinary job3", 7, em);
-        TestHelpers.qSlow3 = CreationTools.initQueue("SlowQueue3", "Queue for the bad guys3", 3, em);
+        TestHelpers.qVip3 = CreationTools.initQueue("VIPQueue3", "Queue for the winners3", 42, em, p);
+        TestHelpers.qNormal3 = CreationTools.initQueue("NormalQueue3", "Queue for the ordinary job3", 7, em, p);
+        TestHelpers.qSlow3 = CreationTools.initQueue("SlowQueue3", "Queue for the bad guys3", 3, em, p);
 
-        TestHelpers.node = CreationTools.createNode("localhost", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        TestHelpers.node2 = CreationTools.createNode("localhost2", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        TestHelpers.node3 = CreationTools.createNode("localhost3", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        TestHelpers.nodeMix = CreationTools.createNode("localhost4", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
-        TestHelpers.nodeMix2 = CreationTools.createNode("localhost5", 0, "./target/outputfiles/", "./../", "./target/tmp", em);
+        TestHelpers.node = CreationTools.createNode("localhost", 0, "./target/outputfiles/", "./../", "./target/tmp", p, em);
+        TestHelpers.node2 = CreationTools.createNode("localhost2", 0, "./target/outputfiles/", "./../", "./target/tmp", p, em);
+        TestHelpers.node3 = CreationTools.createNode("localhost3", 0, "./target/outputfiles/", "./../", "./target/tmp", p, em);
+        TestHelpers.nodeMix = CreationTools.createNode("localhost4", 0, "./target/outputfiles/", "./../", "./target/tmp", p, em);
+        TestHelpers.nodeMix2 = CreationTools.createNode("localhost5", 0, "./target/outputfiles/", "./../", "./target/tmp", p, em);
 
         TestHelpers.dpVip = CreationTools.createDeploymentParameter(node, 40, 1, qVip, em);
         TestHelpers.dpVipMix = CreationTools.createDeploymentParameter(nodeMix, 3, 1, qVip, em);
@@ -104,7 +107,8 @@ public class TestHelpers
             throw new RuntimeException("could not create output directory");
         }
 
-        CreationTools.createMailSession(em, "mail/default", "smtp.gmail.com", 587, true, "jqm.noreply@gmail.com", "marsu1952");
+        CreationTools.createMailSession(em, "mail/default", "smtp.gmail.com", 587, true, "jqm.noreply@gmail.com", "marsu1952",
+                TestHelpers.p);
 
         CreationTools.createRole(em, "administrator", "super admin", "*:*");
         CreationTools.createRole(em, "client power user", "can use the full client API", "node:read", "queue:read", "job_instance:*",
@@ -133,6 +137,7 @@ public class TestHelpers
         em.createQuery("DELETE RPermission WHERE 1=1").executeUpdate();
         em.createQuery("DELETE RRole WHERE 1=1").executeUpdate();
         em.createQuery("DELETE RUser WHERE 1=1").executeUpdate();
+        em.createQuery("DELETE Profile WHERE 1=1").executeUpdate();
 
         em.getTransaction().commit();
 

@@ -53,6 +53,7 @@ import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobDefParameter;
 import com.enioka.jqm.jpamodel.JobInstance;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
@@ -154,9 +155,17 @@ public class CreationTools
         return j;
     }
 
-    public static JobDef createJobDef(String descripton, boolean canBeRestarted, String javaClassName, List<JobDefParameter> jps,
-            String jp, Queue queue, Integer maxTimeRunning, String applicationName, String application, String module, String keyword1,
+    public static JobDef createJobDef(String descripton, boolean canBeRestarted, String javaClassName, List<JobDefParameter> jps, String jp,
+            Queue queue, Integer maxTimeRunning, String applicationName, String application, String module, String keyword1,
             String keyword2, String keyword3, boolean highlander, EntityManager em)
+    {
+        return createJobDef(descripton, canBeRestarted, javaClassName, jps, jp, queue, maxTimeRunning, applicationName, application, module,
+                keyword1, keyword2, keyword3, highlander, null, em);
+    }
+
+    public static JobDef createJobDef(String descripton, boolean canBeRestarted, String javaClassName, List<JobDefParameter> jps, String jp,
+            Queue queue, Integer maxTimeRunning, String applicationName, String application, String module, String keyword1,
+            String keyword2, String keyword3, boolean highlander, Profile p, EntityManager em)
     {
         JobDef j = new JobDef();
         EntityTransaction transac = em.getTransaction();
@@ -177,6 +186,7 @@ public class CreationTools
         j.setKeyword3(keyword3);
         j.setHighlander(highlander);
         j.setJarPath(jp);
+        j.setProfile(p == null ? TestHelpers.p : p);
 
         em.persist(j);
         transac.commit();
@@ -271,7 +281,7 @@ public class CreationTools
 
     // ------------------ NODE ---------------------------------
 
-    public static Node createNode(String nodeName, Integer port, String dlRepo, String repo, String tmpDir, EntityManager em)
+    public static Node createNode(String nodeName, Integer port, String dlRepo, String repo, String tmpDir, Profile p, EntityManager em)
     {
         Node n = new Node();
         EntityTransaction transac = em.getTransaction();
@@ -281,6 +291,7 @@ public class CreationTools
         n.setPort(port);
         n.setDlRepo(dlRepo);
         n.setRepo(repo);
+        n.setProfile(p);
         n.setTmpDirectory(tmpDir);
         try
         {
@@ -297,12 +308,12 @@ public class CreationTools
 
     // ------------------ QUEUE --------------------------------
 
-    public static Queue initQueue(String name, String description, Integer timeToLive, EntityManager em)
+    public static Queue initQueue(String name, String description, Integer timeToLive, EntityManager em, Profile p)
     {
-        return initQueue(name, description, timeToLive, em, false);
+        return initQueue(name, description, timeToLive, em, false, p);
     }
 
-    public static Queue initQueue(String name, String description, Integer timeToLive, EntityManager em, boolean defaultQueue)
+    public static Queue initQueue(String name, String description, Integer timeToLive, EntityManager em, boolean defaultQueue, Profile p)
     {
         Queue q = new Queue();
         EntityTransaction transac = em.getTransaction();
@@ -312,6 +323,7 @@ public class CreationTools
         q.setDescription(description);
         q.setTimeToLive(timeToLive);
         q.setDefaultQueue(defaultQueue);
+        q.setProfile(p);
 
         em.persist(q);
         transac.commit();
@@ -322,7 +334,7 @@ public class CreationTools
     // ------------------ DATABASEPROP --------------------------------
 
     public static JndiObjectResource createDatabaseProp(String name, String driver, String url, String user, String pwd, EntityManager em,
-            String validationQuery, HashMap<String, String> parameters)
+            String validationQuery, Profile p, HashMap<String, String> parameters)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("testWhileIdle", "true");
@@ -342,13 +354,13 @@ public class CreationTools
         prms.put("testOnBorrow", "true");
 
         return createJndiObjectResource(em, name, "javax.sql.DataSource", "org.apache.tomcat.jdbc.pool.DataSourceFactory",
-                "connection for " + user, true, prms);
+                "connection for " + user, true, p, prms);
     }
 
     // ------------------ DATABASEPROP --------------------------------
 
     public static JndiObjectResource createMailSession(EntityManager em, String name, String hostname, int port, boolean useTls,
-            String username, String password)
+            String username, String password, Profile p)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("smtpServerHost", hostname);
@@ -358,12 +370,12 @@ public class CreationTools
         prms.put("useTls", String.valueOf(useTls));
 
         return createJndiObjectResource(em, name, "javax.mail.Session", "com.enioka.jqm.providers.MailSessionFactory",
-                "mail SMTP server used for sending notification mails", true, prms);
+                "mail SMTP server used for sending notification mails", true, p, prms);
     }
 
     // ------------------ JNDI FOR JMS & co --------------------------------
     public static JndiObjectResource createJndiObjectResource(EntityManager em, String jndiAlias, String className, String factoryClass,
-            String description, boolean singleton, HashMap<String, String> parameters)
+            String description, boolean singleton, Profile p, HashMap<String, String> parameters)
     {
         em.getTransaction().begin();
         JndiObjectResource res = new JndiObjectResource();
@@ -373,6 +385,7 @@ public class CreationTools
         res.setName(jndiAlias);
         res.setType(className);
         res.setSingleton(singleton);
+        res.setProfile(p);
         em.persist(res);
 
         for (String parameterName : parameters.keySet())
@@ -390,13 +403,13 @@ public class CreationTools
     }
 
     public static JndiObjectResource createJndiQcfMQSeries(EntityManager em, String jndiAlias, String description, String hostname,
-            String queueManagerName, Integer port, String channel)
+            String queueManagerName, Integer port, String channel, Profile p)
     {
-        return createJndiQcfMQSeries(em, jndiAlias, description, hostname, queueManagerName, port, channel, null);
+        return createJndiQcfMQSeries(em, jndiAlias, description, hostname, queueManagerName, port, channel, p, null);
     }
 
     public static JndiObjectResource createJndiQcfMQSeries(EntityManager em, String jndiAlias, String description, String hostname,
-            String queueManagerName, Integer port, String channel, HashMap<String, String> optionalParameters)
+            String queueManagerName, Integer port, String channel, Profile p, HashMap<String, String> optionalParameters)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("HOST", hostname);
@@ -410,11 +423,11 @@ public class CreationTools
         }
 
         return createJndiObjectResource(em, jndiAlias, "com.ibm.mq.jms.MQQueueConnectionFactory",
-                "com.ibm.mq.jms.MQQueueConnectionFactoryFactory", description, false, prms);
+                "com.ibm.mq.jms.MQQueueConnectionFactoryFactory", description, false, p, prms);
     }
 
     public static JndiObjectResource createJndiQueueMQSeries(EntityManager em, String jndiAlias, String description, String queueName,
-            HashMap<String, String> optionalParameters)
+            Profile p, HashMap<String, String> optionalParameters)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("QU", queueName);
@@ -423,10 +436,11 @@ public class CreationTools
             prms.putAll(optionalParameters);
         }
 
-        return createJndiObjectResource(em, jndiAlias, "com.ibm.mq.jms.MQQueue", "com.ibm.mq.jms.MQQueueFactory", description, false, prms);
+        return createJndiObjectResource(em, jndiAlias, "com.ibm.mq.jms.MQQueue", "com.ibm.mq.jms.MQQueueFactory", description, false, p,
+                prms);
     }
 
-    public static JndiObjectResource createJndiQcfActiveMQ(EntityManager em, String jndiAlias, String description, String Url,
+    public static JndiObjectResource createJndiQcfActiveMQ(EntityManager em, String jndiAlias, String description, String Url, Profile p,
             HashMap<String, String> optionalParameters)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
@@ -437,11 +451,11 @@ public class CreationTools
         }
 
         return createJndiObjectResource(em, jndiAlias, "org.apache.activemq.ActiveMQConnectionFactory",
-                "org.apache.activemq.jndi.JNDIReferenceFactory", description, false, prms);
+                "org.apache.activemq.jndi.JNDIReferenceFactory", description, false, p, prms);
     }
 
     public static JndiObjectResource createJndiQueueActiveMQ(EntityManager em, String jndiAlias, String description, String queueName,
-            HashMap<String, String> optionalParameters)
+            Profile p, HashMap<String, String> optionalParameters)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("physicalName", queueName);
@@ -451,21 +465,22 @@ public class CreationTools
         }
 
         return createJndiObjectResource(em, jndiAlias, "org.apache.activemq.command.ActiveMQQueue",
-                "org.apache.activemq.jndi.JNDIReferenceFactory", description, false, prms);
+                "org.apache.activemq.jndi.JNDIReferenceFactory", description, false, p, prms);
     }
 
-    public static JndiObjectResource createJndiFile(EntityManager em, String jndiAlias, String description, String path)
+    public static JndiObjectResource createJndiFile(EntityManager em, String jndiAlias, String description, String path, Profile p)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("PATH", path);
-        return createJndiObjectResource(em, jndiAlias, "java.io.File.File", "com.enioka.jqm.providers.FileFactory", description, true, prms);
+        return createJndiObjectResource(em, jndiAlias, "java.io.File.File", "com.enioka.jqm.providers.FileFactory", description, true, p,
+                prms);
     }
 
-    public static JndiObjectResource createJndiUrl(EntityManager em, String jndiAlias, String description, String url)
+    public static JndiObjectResource createJndiUrl(EntityManager em, String jndiAlias, String description, String url, Profile p)
     {
         HashMap<String, String> prms = new HashMap<String, String>();
         prms.put("URL", url);
-        return createJndiObjectResource(em, jndiAlias, "java.io.URL", "com.enioka.jqm.providers.UrlFactory", description, true, prms);
+        return createJndiObjectResource(em, jndiAlias, "java.io.URL", "com.enioka.jqm.providers.UrlFactory", description, true, p, prms);
     }
 
     public static RRole createRole(EntityManager em, String roleName, String description, String... permissions)
@@ -505,4 +520,16 @@ public class CreationTools
         return u;
     }
 
+    public static Profile createProfile(EntityManager em, String name, String description)
+    {
+        Profile p = new Profile();
+        p.setDescription(description);
+        ;
+        p.setName(name);
+
+        em.getTransaction().begin();
+        em.persist(p);
+        em.getTransaction().commit();
+        return p;
+    }
 }

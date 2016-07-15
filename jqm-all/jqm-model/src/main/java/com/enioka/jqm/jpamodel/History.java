@@ -67,6 +67,13 @@ public class History implements Serializable
     @ManyToOne(fetch = FetchType.EAGER, targetEntity = com.enioka.jqm.jpamodel.Node.class)
     @JoinColumn(name = "node_id")
     private Node node;
+    
+    @Column(nullable = false, length = 50, name = "profileName")
+    private String profileName;
+    
+    @ManyToOne(fetch = FetchType.LAZY, targetEntity = com.enioka.jqm.jpamodel.Profile.class)
+    @JoinColumn(name = "profile_id")
+    private Profile profile;
 
     // null if cancelled before running
     @Column(nullable = true, length = 100, name = "nodeName")
@@ -631,5 +638,37 @@ public class History implements Serializable
     public void setNodeName(final String nodeName)
     {
         this.nodeName = nodeName;
+    }
+
+    /**
+     * The name of the profile (i.e. the sub-environment) this launch belongs to.
+     */
+    public String getProfileName()
+    {
+        return profileName;
+    }
+
+    /**
+     * See {@link #getProfileName()}
+     */
+    public void setProfileName(String profileName)
+    {
+        this.profileName = profileName;
+    }
+
+    /**
+     * The profile (i.e. the sub-environment) this launch belongs to.
+     */
+    public Profile getProfile()
+    {
+        return profile;
+    }
+
+    /**
+     * See {@link #getProfile()}
+     */
+    public void setProfile(Profile profile)
+    {
+        this.profile = profile;
     }
 }

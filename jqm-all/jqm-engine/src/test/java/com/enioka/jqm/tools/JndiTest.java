@@ -50,8 +50,8 @@ public class JndiTest extends JqmBaseTest
         JobRequest.create("Jms", "TestUser").addParameter("p1", "1").addParameter("p2", "2").submit();
 
         // Create JMS JNDI references for use by the test jar
-        CreationTools.createJndiQueueMQSeries(em, "jms/testqueue", "test Queue", "Q.GEO.OUT", null);
-        CreationTools.createJndiQcfMQSeries(em, "jms/qcf", "test QCF", "10.0.1.90", "QM.TEC1", 1414, "WASCHANNEL");
+        CreationTools.createJndiQueueMQSeries(em, "jms/testqueue", "test Queue", "Q.GEO.OUT", TestHelpers.p,null);
+        CreationTools.createJndiQcfMQSeries(em, "jms/qcf", "test QCF", "10.0.1.90", "QM.TEC1", 1414, "WASCHANNEL",TestHelpers.p);
 
         addAndStartEngine();
         TestHelpers.waitFor(1, 10000, em);
@@ -69,9 +69,9 @@ public class JndiTest extends JqmBaseTest
         JobRequest.create("Jms", "TestUser").submit();
 
         // Create JMS JNDI references for use by the test jar
-        CreationTools.createJndiQueueActiveMQ(em, "jms/testqueue", "test queue", "Q.TEST", null);
+        CreationTools.createJndiQueueActiveMQ(em, "jms/testqueue", "test queue", "Q.TEST",TestHelpers.p, null);
         CreationTools.createJndiQcfActiveMQ(em, "jms/qcf", "test QCF", "vm:broker:(tcp://localhost:1234)?persistent=false&useJmx=false",
-                null);
+                TestHelpers.p,  null);
 
         addAndStartEngine();
         TestHelpers.waitFor(1, 10000, em);
@@ -89,9 +89,9 @@ public class JndiTest extends JqmBaseTest
         JobRequest.create("Jms", "TestUser").submit();
 
         // Create JMS JNDI references for use by the test jar
-        CreationTools.createJndiQueueActiveMQ(em, "jms/testqueue", "test queue", "Q.TEST", null);
+        CreationTools.createJndiQueueActiveMQ(em, "jms/testqueue", "test queue", "Q.TEST",TestHelpers.p, null);
         CreationTools.createJndiQcfActiveMQ(em, "jms/qcf2", "test QCF", "vm:broker:(tcp://localhost:1234)?persistent=false&useJmx=false",
-                null);
+                TestHelpers.p,   null);
 
         addAndStartEngine();
         TestHelpers.waitFor(1, 10000, em);
@@ -122,7 +122,7 @@ public class JndiTest extends JqmBaseTest
     {
         // Create JMS JNDI references for use by the test jar
         String path = "./testdir";
-        CreationTools.createJndiFile(em, "fs/testdirectory", "test directory", path);
+        CreationTools.createJndiFile(em, "fs/testdirectory", "test directory", path, TestHelpers.p);
 
         // Create the directory...
         (new File(path)).mkdir();
@@ -145,7 +145,7 @@ public class JndiTest extends JqmBaseTest
     {
         // Create JMS JNDI references for use by the test jar
         String url = "http://www.marsupilami.com";
-        CreationTools.createJndiUrl(em, "url/testurl", "test directory", url);
+        CreationTools.createJndiUrl(em, "url/testurl", "test directory", url, TestHelpers.p);
 
         try
         {
@@ -162,7 +162,7 @@ public class JndiTest extends JqmBaseTest
     public void testJndiFile() throws Exception
     {
         // Create JMS JNDI references for use by the test jar
-        CreationTools.createJndiFile(em, "fs/test", "test resource", "/tmp");
+        CreationTools.createJndiFile(em, "fs/test", "test resource", "/tmp", TestHelpers.p);
 
         JqmSimpleTest.create(em, "pyl.JndiFile", "jqm-test-pyl-nodep").run(this);
     }
@@ -180,7 +180,7 @@ public class JndiTest extends JqmBaseTest
     public void testJndiJdbcPool() throws Exception
     {
         CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", TestHelpers.p, null);
         em.getTransaction().begin();
         em.createQuery("UPDATE JndiObjectResourceParameter p SET value='true' WHERE key='jmxEnabled'").executeUpdate();
         em.getTransaction().commit();
@@ -203,7 +203,7 @@ public class JndiTest extends JqmBaseTest
     {
         // Sanity check - our test DOES leak connections
         CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA", "", em,
-                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS",TestHelpers.p, null);
         em.getTransaction().begin();
         em.createQuery("UPDATE JndiObjectResourceParameter p SET value='true' WHERE key='jmxEnabled'").executeUpdate();
         em.getTransaction().commit();
@@ -230,7 +230,7 @@ public class JndiTest extends JqmBaseTest
     {
         // Create a connection with our custom interceptor
         JndiObjectResource j = CreationTools.createDatabaseProp("jdbc/test", "org.hsqldb.jdbcDriver", "jdbc:hsqldb:mem:testdbmarsu", "SA",
-                "", em, "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS", null);
+                "", em, "SELECT 1 FROM INFORMATION_SCHEMA.SYSTEM_USERS",TestHelpers.p, null);
         em.getTransaction().begin();
         JndiObjectResourceParameter p = new JndiObjectResourceParameter();
         p.setKey("jdbcInterceptors");

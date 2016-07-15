@@ -305,6 +305,7 @@ final class HibernateClient implements JqmClient
 
             JobInstance ji = new JobInstance();
             ji.setJd(job);
+            ji.setProfile(job.getProfile());
 
             ji.setState(State.SUBMITTED);
             ji.setQueue(q);
@@ -495,6 +496,8 @@ final class HibernateClient implements JqmClient
             History h = new History();
             h.setId(ji.getId());
             h.setJd(ji.getJd());
+            h.setProfile(ji.getProfile());
+            h.setProfileName(ji.getProfile().getName());
             h.setApplicationName(ji.getJd().getApplicationName());
             h.setSessionId(ji.getSessionID());
             h.setQueue(ji.getQueue());

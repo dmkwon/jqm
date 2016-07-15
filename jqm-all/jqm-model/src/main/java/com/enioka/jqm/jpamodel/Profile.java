@@ -19,29 +19,25 @@
 package com.enioka.jqm.jpamodel;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 /**
  * <strong>Not part of any API - this an internal JQM class and may change without notice.</strong> <br>
- * JPA persistence class for storing the list of queues on which enqueuing job execution requests is possible.
+ * JPA persistence class for storing the name of configuration sets. The profiles allow to partition the 
+ * global JQM cluster in multiple logical sub parts (often mapped to environments).
  */
 @Entity
-@Table(name = "Queue")
-public class Queue implements Serializable
+@Table(name = "Profile")
+public class Profile implements Serializable
 {
-    private static final long serialVersionUID = 4677042929807285233L;
+    private static final long serialVersionUID = -72792497477067532L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
@@ -51,18 +47,6 @@ public class Queue implements Serializable
 
     @Column(nullable = false, length = 1000, name = "description")
     private String description;
-
-    @Column(nullable = false, name = "timeToLive")
-    private Integer timeToLive = 0;
-
-    @Column(name = "defaultQueue")
-    private boolean defaultQueue;
-
-    @OneToMany(mappedBy = "queue", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<JobDef> jobdefs = new ArrayList<JobDef>();
-    
-    @ManyToOne(optional=false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private Profile profile;
 
     /**
      * Functional key. Queues are specified by name inside all APIs. Must be unique.<br>
@@ -112,62 +96,5 @@ public class Queue implements Serializable
     void setId(final int id)
     {
         this.id = id;
-    }
-
-    /**
-     * There is only one (and always one) queue which is the "default queue", which is used for operations requiring a queue when no queue
-     * is specified.
-     */
-    public boolean isDefaultQueue()
-    {
-        return defaultQueue;
-    }
-
-    /**
-     * See {@link #isDefaultQueue()}
-     */
-    public void setDefaultQueue(final boolean defaultQueue)
-    {
-        this.defaultQueue = defaultQueue;
-    }
-
-    /**
-     * Not used for now. Reserved. Should be the max time to wait inside the queue.
-     */
-    public Integer getTimeToLive()
-    {
-        return timeToLive;
-    }
-
-    /**
-     * See {@link #getTimeToLive()}
-     */
-    public void setTimeToLive(Integer timeToLive)
-    {
-        this.timeToLive = timeToLive;
-    }
-
-    /**
-     * All the {@link JobDef} that use this {@link Queue} as their default queue.
-     */
-    public List<JobDef> getJobdefs()
-    {
-        return jobdefs;
-    }
-    
-    /**
-     * This object belongs to a specific Profile. This allows to partition the global JQM cluster in multiple logical environments.
-     */
-    public Profile getProfile()
-    {
-        return profile;
-    }
-
-    /**
-     * See {@link #getProfile()}
-     */
-    public void setProfile(Profile profile)
-    {
-        this.profile = profile;
     }
 }

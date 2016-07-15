@@ -30,6 +30,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import com.enioka.jqm.jpamodel.JobDef;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 
 class XmlQueueParser
@@ -41,7 +42,7 @@ class XmlQueueParser
         // Utility class.
     }
 
-    static void parse(String path, EntityManager em) throws JqmEngineException
+    static void parse(String path, Profile intoProfile, EntityManager em) throws JqmEngineException
     {
         // Argument checks
         jqmlogger.trace(path);
@@ -93,6 +94,9 @@ class XmlQueueParser
                 {
                     q.setTimeToLive(Integer.parseInt(qElement.getElementsByTagName("timeToLive").item(0).getTextContent()));
                 }
+                
+                // Profile
+                q.setProfile(intoProfile);
 
                 // We now merge & commit - we will need to reference the queue in the next paragraph.
                 q = em.merge(q);
@@ -112,6 +116,7 @@ class XmlQueueParser
                         jd.setQueue(q);
                     }
                 }
+                
                 em.getTransaction().commit();
             }
         }

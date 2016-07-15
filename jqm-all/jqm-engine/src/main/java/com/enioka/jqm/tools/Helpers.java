@@ -61,6 +61,7 @@ import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobInstance;
 import com.enioka.jqm.jpamodel.Message;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
@@ -466,9 +467,26 @@ final class Helpers
     {
         em.getTransaction().begin();
 
+        // At least one profile
+        Profile p = null;
+        long i = (Long) em.createQuery("SELECT COUNT(p) FROM Profile p").getSingleResult();
+        if (i == 0L)
+        {
+            p = new Profile();
+            p.setDescription("default profile");
+            p.setName("default");
+            em.persist(p);
+            
+            jqmlogger.info("A default profile was created in the configuration");
+        }
+        else
+        {
+            p = em.createQuery("SELECT p FROM Profile p", Profile.class).getSingleResult();
+        }
+        
         // Default queue
         Queue q = null;
-        long i = (Long) em.createQuery("SELECT COUNT(qu) FROM Queue qu").getSingleResult();
+        i = (Long) em.createQuery("SELECT COUNT(qu) FROM Queue qu").getSingleResult();
         if (i == 0L)
         {
             q = new Queue();
@@ -655,6 +673,8 @@ final class Helpers
         h.setNode(job.getNode());
         h.setNodeName(job.getNode().getName());
         h.setHighlander(job.getJd().isHighlander());
+        h.setProfile(job.getProfile());
+        h.setProfileName(job.getProfile().getName());
 
         em.persist(h);
 

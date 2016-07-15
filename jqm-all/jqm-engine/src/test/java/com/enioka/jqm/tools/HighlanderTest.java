@@ -143,7 +143,7 @@ public class HighlanderTest extends JqmBaseTest
     @Test
     public void testHighlanderMultiNodeBug195() throws Exception
     {
-        Queue q = CreationTools.initQueue("q", "", 42, em);
+        Queue q = CreationTools.initQueue("q", "", 42, em, TestHelpers.p);
         CreationTools.createDeploymentParameter(TestHelpers.node, 1, 1, q, em);
         CreationTools.createDeploymentParameter(TestHelpers.nodeMix, 1, 1, q, em);
 

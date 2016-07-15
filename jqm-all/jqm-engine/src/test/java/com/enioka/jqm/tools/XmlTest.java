@@ -49,15 +49,15 @@ public class XmlTest extends JqmBaseTest
         Assert.assertEquals(true, t.exists());
 
         // --> Test Import
-        XmlQueueParser.parse(TestHelpers.node.getDlRepo() + "xmlexportqueuetest.xml", em);
+        XmlQueueParser.parse(TestHelpers.node.getDlRepo() + "xmlexportqueuetest.xml", TestHelpers.p, em);
 
         long ii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'VIPQueue'").getSingleResult();
         long iii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'NormalQueue'").getSingleResult();
         Assert.assertEquals(2, ii + iii);
-        Assert.assertEquals("VIPQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class)
-                .getSingleResult());
-        Assert.assertEquals("VIPQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class)
-                .getSingleResult());
+        Assert.assertEquals("VIPQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class).getSingleResult());
+        Assert.assertEquals("VIPQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class).getSingleResult());
         Assert.assertEquals("NormalQueue",
                 em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'DateTime' ", String.class).getSingleResult());
         t.delete();
@@ -79,15 +79,15 @@ public class XmlTest extends JqmBaseTest
         Assert.assertEquals(true, t.exists());
 
         // --> Test Import
-        XmlQueueParser.parse(TestHelpers.node.getDlRepo() + "xmlexportqueuetest.xml", em);
+        XmlQueueParser.parse(TestHelpers.node.getDlRepo() + "xmlexportqueuetest.xml", TestHelpers.p, em);
 
         long ii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'VIPQueue'").getSingleResult();
         long iii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'NormalQueue'").getSingleResult();
         Assert.assertEquals(2, ii + iii);
-        Assert.assertEquals("VIPQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class)
-                .getSingleResult());
-        Assert.assertEquals("VIPQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class)
-                .getSingleResult());
+        Assert.assertEquals("VIPQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class).getSingleResult());
+        Assert.assertEquals("VIPQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class).getSingleResult());
         Assert.assertEquals("NormalQueue",
                 em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'DateTime' ", String.class).getSingleResult());
         t.delete();
@@ -167,15 +167,15 @@ public class XmlTest extends JqmBaseTest
         CreationTools.createJobDef(null, true, "App", null, "jqm-tests/jqm-test-datetimemaven/target/test.jar", TestHelpers.qNormal, 42,
                 "DateTime", null, "Franquin", "ModuleMachin", "other", "other", false, em);
 
-        XmlQueueParser.parse("target/payloads/jqm-test-xml/xmlqueuetest.xml", em);
+        XmlQueueParser.parse("target/payloads/jqm-test-xml/xmlqueuetest.xml", TestHelpers.p, em);
 
         long ii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'XmlQueue'").getSingleResult();
         long iii = (Long) em.createQuery("SELECT COUNT(q) FROM Queue q WHERE q.name = 'XmlQueue2'").getSingleResult();
         Assert.assertEquals(2, ii + iii);
-        Assert.assertEquals("XmlQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class)
-                .getSingleResult());
-        Assert.assertEquals("XmlQueue", em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class)
-                .getSingleResult());
+        Assert.assertEquals("XmlQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Fibo' ", String.class).getSingleResult());
+        Assert.assertEquals("XmlQueue",
+                em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'Geo' ", String.class).getSingleResult());
         Assert.assertEquals("XmlQueue2",
                 em.createQuery("SELECT j.queue.name FROM JobDef j WHERE j.applicationName = 'DateTime' ", String.class).getSingleResult());
     }

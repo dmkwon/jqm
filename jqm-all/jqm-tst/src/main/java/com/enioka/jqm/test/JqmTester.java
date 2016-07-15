@@ -16,6 +16,7 @@ import com.enioka.jqm.jpamodel.GlobalParameter;
 import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobInstance;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RuntimeParameter;
 import com.enioka.jqm.jpamodel.State;
@@ -55,6 +56,7 @@ public class JqmTester
     private EntityManagerFactory emf = null;
     private EntityManager em = null;
     private Node node = null;
+    private Profile profile = null;
     private JobDef jd = null;
     private Queue q = null;
     private JobInstance ji = null;
@@ -98,10 +100,17 @@ public class JqmTester
         {
             throw new RuntimeException(new IOException("./ext directory does not exist and cannot create it"));
         }
+        
+        // Create profile
+        profile = new Profile();
+        profile.setDescription("tester profile");
+        profile.setName("tester");
+        em.persist(profile);
 
         // Create node
         resDirectoryPath = createTempDirectory();
         node = new Node();
+        node.setProfile(profile);
         node.setDlRepo(resDirectoryPath.getAbsolutePath());
         node.setDns("test");
         node.setName("testtempnode");
@@ -111,12 +120,14 @@ public class JqmTester
         em.persist(node);
 
         q = new Queue(); // Only useful because JobDef.queue is non-null
+        q.setProfile(profile);
         q.setDefaultQueue(true);
         q.setName("default");
         q.setDescription("default test queue");
         em.persist(q);
 
         jd = new JobDef();
+        jd.setProfile(profile);
         jd.setApplicationName("TestApplication");
         jd.setJarPath("/dev/null");
         jd.setJavaClassName(className);
@@ -124,6 +135,7 @@ public class JqmTester
         em.persist(jd);
 
         ji = new JobInstance();
+        ji.setProfile(profile);
         ji.setApplication("TestApplication");
         ji.setCreationDate(Calendar.getInstance());
         ji.setAttributionDate(Calendar.getInstance());
