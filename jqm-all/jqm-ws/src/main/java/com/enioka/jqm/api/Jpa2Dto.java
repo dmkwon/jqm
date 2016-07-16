@@ -27,6 +27,7 @@ import com.enioka.jqm.jpamodel.JndiObjectResourceParameter;
 import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobDefParameter;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
@@ -34,6 +35,7 @@ import com.enioka.jqm.jpamodel.RUser;
 import com.enioka.jqm.webui.admin.dto.GlobalParameterDto;
 import com.enioka.jqm.webui.admin.dto.JndiObjectResourceDto;
 import com.enioka.jqm.webui.admin.dto.ParameterDto;
+import com.enioka.jqm.webui.admin.dto.ProfileDto;
 import com.enioka.jqm.webui.admin.dto.JobDefDto;
 import com.enioka.jqm.webui.admin.dto.NodeDto;
 import com.enioka.jqm.webui.admin.dto.QueueDto;
@@ -79,6 +81,10 @@ public class Jpa2Dto
         else if (o instanceof RRole)
         {
             return (D) getDTO((RRole) o);
+        }
+        else if (o instanceof Profile)
+        {
+            return (D) getDTO((Profile) o);
         }
 
         return null;
@@ -224,6 +230,15 @@ public class Jpa2Dto
             res.getPermissions().add(p.getName());
         }
 
+        return res;
+    }
+    
+    private static ProfileDto getDTO(Profile p)
+    {
+        ProfileDto res = new ProfileDto();
+        res.setId(p.getId());
+        res.setName(p.getName());
+        res.setDescription(p.getDescription());
         return res;
     }
 }

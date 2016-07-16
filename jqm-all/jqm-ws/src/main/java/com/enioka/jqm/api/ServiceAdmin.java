@@ -42,6 +42,7 @@ import com.enioka.jqm.jpamodel.GlobalParameter;
 import com.enioka.jqm.jpamodel.JndiObjectResource;
 import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
@@ -52,6 +53,7 @@ import com.enioka.jqm.webui.admin.dto.JndiObjectResourceDto;
 import com.enioka.jqm.webui.admin.dto.JobDefDto;
 import com.enioka.jqm.webui.admin.dto.NodeDto;
 import com.enioka.jqm.webui.admin.dto.PemissionsBagDto;
+import com.enioka.jqm.webui.admin.dto.ProfileDto;
 import com.enioka.jqm.webui.admin.dto.QueueDto;
 import com.enioka.jqm.webui.admin.dto.QueueMappingDto;
 import com.enioka.jqm.webui.admin.dto.RRoleDto;
@@ -672,5 +674,61 @@ public class ServiceAdmin
                 .getEngineLog(nodeName, latest);
         res.setHeader("Content-Disposition", "attachment; filename=" + nodeName + ".log");
         return fs;
+    }
+    
+    
+    // ////////////////////////////////////////////////////////////////////////
+    // Profiles
+    // ////////////////////////////////////////////////////////////////////////
+
+    @GET
+    @Path("profile")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public List<ProfileDto> getProfiles()
+    {
+        return getDtoList(Profile.class);
+    }
+
+    @PUT
+    @Path("profile")
+    @Consumes(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public void setProfiles(List<ProfileDto> dtos)
+    {
+        setItems(Profile.class, dtos);
+    }
+
+    @GET
+    @Path("profile/{id}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public ProfileDto getProfile(@PathParam("id") int id)
+    {
+        return getDto(Profile.class, id);
+    }
+
+    @PUT
+    @Path("profile/{id}")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setProfile(@PathParam("id") Integer id, ProfileDto dto)
+    {
+        dto.setId(id);
+        setItem(dto);
+    }
+
+    @POST
+    @Path("profile")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setProfile(ProfileDto dto)
+    {
+        setItem(dto);
+    }
+
+    @DELETE
+    @Path("profile/{id}")
+    public void deleteProfile(@PathParam("id") Integer id)
+    {
+        deleteItem(Profile.class, id);
     }
 }

@@ -50,9 +50,10 @@
 		<profile>
 			<id>EclipseM2E</id>
 			<activation>
-				<property>
+			<activeByDefault>true</activeByDefault>
+				<!-- <property>
 					<name>m2e.version</name>
-				</property>
+				</property> -->
 			</activation>
 			<build>
 				<plugins>

@@ -10,19 +10,19 @@ to any resources that could not be accessed to in any other ways.
 These services are REST-style services. It is deployed along with the client web services and the console (in the same war file).
 In accordance to the most used REST convention, the HTTP verbs are used this way:
 
-+---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------------+
-| Verb    | Action on container URLs                                                                  | Action on item URLs                                                  |
-+========+===========================================================================================+================================================================+
-| GET    | obtain a list of instances                                                                | get the instance                                               |
-+--------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
-| POST   | add an instance or update it if there is already an instance with                         | Not used                                                       |
-|        | the same ID (null ID means create an object)                                              |                                                                |
-+--------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
-| PUT    | replace the whole collection. Objects that are not in the POST part                       | create or update the instance (null ID means create an object) |
-|        | of the request are dropped, other are created or updated (null ID means create an object) |                                                                |
-+--------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
-| DELETE | Not used                                                                                  | removes the object for ever                                    |
-+--------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
++---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
+| Verb    | Action on container URLs                                                                  | Action on item URLs                                            |
++=========+===========================================================================================+================================================================+
+| GET     | obtain a list of instances                                                                | get the instance                                               |
++---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
+| POST    | add an instance or update it if there is already an instance with                         | Not used                                                       |
+|         | the same ID (null ID means create an object)                                              |                                                                |
++---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
+| PUT     | replace the whole collection. Objects that are not in the POST part                       | create or update the instance (null ID means create an object) |
+|         | of the request are dropped, other are created or updated (null ID means create an object) |                                                                |
++---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
+| DELETE  | Not used                                                                                  | removes the object for ever                                    |
++---------+-------------------------------------------------------------------------------------------+----------------------------------------------------------------+
 
 .. note:: the API never returns anything on POST/PUT/DELETE operations. On GET, it will output JSON (application/json). By setting the "accept" header in the request, it is 
 	also possible to obtain application/xml.
@@ -30,6 +30,21 @@ In accordance to the most used REST convention, the HTTP verbs are used this way
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | URL                    | GET | POST | PUT | DELETE | Description                                                                                                                                          |
 +========================+=====+======+=====+========+======================================================================================================================================================+
+| /me                    | X   |      |     |        | All the permissions (a list of strings in the object:verb format) of the currently authenticated user (404 if not authenticated)                     |
++------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+| /prm                   | X   | X    | X   |        | Cluster parameters container. Example of return JSON for a GET::                                                                                     |
+|                        |     |      |     |        |                                                                                                                                                      |
+|                        |     |      |     |        | [{"id":3,"key":"mavenRepo","value":"http://repo1.maven.org/maven2/"},{"id":4,"key":"defaultConnection","value":"jdbc/jqm"},{"id":5,                  |
+|                        |     |      |     |        | "key":"deadline","value":"10"},{"id":6,"key":"logFilePerLaunch","value":"true"},{"id":7,"key":"internalPollingPeriodMs","value":"10000"},            |
+|                        |     |      |     |        | {"id":187,"key":"name","value":"enter value"}]                                                                                                       |
++------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+| /node                  | X   | X    | X   |        | Cluster nodes (JQM engines)   ::                                                                                                                     |
+|                        |     |      |     |        |                                                                                                                                                      |
+|                        |     |      |     |        | [{"dns":"localhost","id":1,"jmxRegistryPort":0,"jmxServerPort":0,"jobRepoDirectory":"C:\\TEMP\\jqm-1.1.4-SNAPSHOT/jobs/","name":"JEUX",              |
+|                        |     |      |     |        | "outputDirectory":"C:\\TEMP\\jqm-1.1.4-SNAPSHOT/outputfiles/","port":63821,"rootLogLevel":"INFO"}]                                                   |
++------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+| /node/{id}             | X   |      |     |        | A cluster node (a JQM engine). Creation should be done by running the createnode command line at service setup.                                      |
++------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /q                     | X   | X    | X   |        | Container for queues. Example of return JSON for a GET::                                                                                             |
 |                        |     |      |     |        |                                                                                                                                                      |
 |                        |     |      |     |        | [{"defaultQueue":true,"description":"default queue","id":2,"name":"DEFAULT"},{"defaultQueue":false,"description":"meuh","id":3,"name":"MEUH"}]       |
@@ -54,20 +69,7 @@ In accordance to the most used REST convention, the HTTP verbs are used this way
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /jndi/{id}             | X   |      | X   | X      | Resource definitions with JNDI alias                                                                                                                 |
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| /prm                   | X   | X    | X   |        | Cluster parameters container. Example of return JSON for a GET::                                                                                     |
-|                        |     |      |     |        |                                                                                                                                                      |
-|                        |     |      |     |        | [{"id":3,"key":"mavenRepo","value":"http://repo1.maven.org/maven2/"},{"id":4,"key":"defaultConnection","value":"jdbc/jqm"},{"id":5,                  |
-|                        |     |      |     |        | "key":"deadline","value":"10"},{"id":6,"key":"logFilePerLaunch","value":"true"},{"id":7,"key":"internalPollingPeriodMs","value":"10000"},            |
-|                        |     |      |     |        | {"id":187,"key":"name","value":"enter value"}]                                                                                                       |
-+------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /prm/{id}              | X   |      | X   | X      | Cluster parameter                                                                                                                                    |
-+------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| /node                  | X   | X    | X   |        | Cluster nodes (JQM engines)   ::                                                                                                                     |
-|                        |     |      |     |        |                                                                                                                                                      |
-|                        |     |      |     |        | [{"dns":"localhost","id":1,"jmxRegistryPort":0,"jmxServerPort":0,"jobRepoDirectory":"C:\\TEMP\\jqm-1.1.4-SNAPSHOT/jobs/","name":"JEUX",              |
-|                        |     |      |     |        | "outputDirectory":"C:\\TEMP\\jqm-1.1.4-SNAPSHOT/outputfiles/","port":63821,"rootLogLevel":"INFO"}]                                                   |
-+------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| /node/{id}             | X   |      |     |        | A cluster node (a JQM engine). Creation should be done by running the createnode command line at service setup.                                      |
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /jd                    | X   | X    | X   |        | Job Definitions.  Sample GET result::                                                                                                                |
 |                        |     |      |     |        |                                                                                                                                                      |
@@ -87,8 +89,6 @@ In accordance to the most used REST convention, the HTTP verbs are used this way
 |                        |     |      |     |        |                                                                                                                                                      |
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /role/{id}             | X   |      | X   | X      |                                                                                                                                                      |
-+------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
-| /me                    | X   |      |     |        | All the permissions (a list of strings in the object:verb format) of the currently authenticated user (404 if not authenticated)                     |
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+
 | /user/{id}/certificate | X   |      |     |        | A zip file containing a new set of certificates allowing the deignated user to authantify. Only used when internal PKI is used.                      |
 +------------------------+-----+------+-----+--------+------------------------------------------------------------------------------------------------------------------------------------------------------+

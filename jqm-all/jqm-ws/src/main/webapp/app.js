@@ -38,6 +38,9 @@ jqmApp.config([ '$routeProvider', function($routeProvider, µPermManager)
     }).when('/history', {
         templateUrl : 'template/history.html',
         controller : 'µHistoryCtrl'
+    }).when('/profile', {
+        templateUrl : 'template/profile_list.html',
+        controller : 'µProfileListCtrl'
     }).otherwise({
         redirectTo : '/home'
     });
@@ -87,6 +90,10 @@ jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPerm
         link : '#/history',
         label : '<span class="glyphicon glyphicon-eye-open"></span> Runs',
         permission : 'job_instance:read',
+    }, {
+        link : '#/profile',
+        label : '<span class="glyphicon glyphicon-eye-open"></span> Profiles',
+        permission : 'profile:read',
     }, ];
 
     $scope.selectedTab = $scope.tabs[0];

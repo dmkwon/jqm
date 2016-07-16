@@ -33,6 +33,7 @@ import com.enioka.jqm.jpamodel.JndiObjectResourceParameter;
 import com.enioka.jqm.jpamodel.JobDef;
 import com.enioka.jqm.jpamodel.JobDefParameter;
 import com.enioka.jqm.jpamodel.Node;
+import com.enioka.jqm.jpamodel.Profile;
 import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
@@ -42,6 +43,7 @@ import com.enioka.jqm.webui.admin.dto.JndiObjectResourceDto;
 import com.enioka.jqm.webui.admin.dto.JobDefDto;
 import com.enioka.jqm.webui.admin.dto.NodeDto;
 import com.enioka.jqm.webui.admin.dto.ParameterDto;
+import com.enioka.jqm.webui.admin.dto.ProfileDto;
 import com.enioka.jqm.webui.admin.dto.QueueDto;
 import com.enioka.jqm.webui.admin.dto.QueueMappingDto;
 import com.enioka.jqm.webui.admin.dto.RRoleDto;
@@ -88,6 +90,10 @@ class Dto2Jpa
         else if (dto instanceof NodeDto)
         {
             return (J) setJpa(em, (NodeDto) dto);
+        }
+        else if (dto instanceof ProfileDto)
+        {
+            return (J) setJpa(em, (ProfileDto) dto);
         }
         return null;
     }
@@ -498,7 +504,46 @@ class Dto2Jpa
                 throw new JqmInvalidRequestException("Cannot remove a role currently assigned to a user");
             }
         }
+        else if (jpa instanceof Profile)
+        {
+            for (Node n: em.createQuery("SELECT n FROM Node n WHERE n.profile = :p", Node.class).setParameter("p", jpa).getResultList())
+            {
+                clean(n, em);
+            }
+            for (JobDef n: em.createQuery("SELECT n FROM JobDef n WHERE n.profile = :p", JobDef.class).setParameter("p", jpa).getResultList())
+            {
+                clean(n, em);
+            }
+            for (Queue n: em.createQuery("SELECT n FROM Queue n WHERE n.profile = :p", Queue.class).setParameter("p", jpa).getResultList())
+            {
+                clean(n, em);
+            }
+        }
 
         // Other types do not have relationships needing cleaning up.
+    }
+    
+    private static Profile setJpa(EntityManager em, ProfileDto dto)
+    {
+        Profile jpa = null;
+
+        if (dto.getId() == null)
+        {
+            jpa = new Profile();
+        }
+        else
+        {
+            jpa = em.find(Profile.class, dto.getId());
+        }
+
+        // Update or set fields        
+        jpa.setDescription(dto.getDescription());
+        jpa.setName(dto.getName());
+
+        // save
+        jpa = em.merge(jpa);
+
+        // Done
+        return jpa;
     }
 }

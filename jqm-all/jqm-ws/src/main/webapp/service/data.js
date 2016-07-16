@@ -2,6 +2,16 @@
 
 var jqmServices = angular.module('jqmServices', [ 'ngResource' ]);
 
+jqmServices.factory('µProfileDto', [ '$resource', function($resource)
+{
+      return $resource('ws/admin/profile/:id', {id: ''}, {
+      saveAll : {
+          method : 'PUT',
+          isArray : true
+      },
+      });
+} ]);
+
 jqmServices.factory('µNodeDto', [ '$resource', function($resource)
 {
     return $resource('ws/admin/node/:id', {}, {
