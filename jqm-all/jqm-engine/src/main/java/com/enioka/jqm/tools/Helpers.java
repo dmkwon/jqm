@@ -415,7 +415,7 @@ final class Helpers
      * @param em
      *            an EntityManager on which a transaction will be opened.
      */
-    static void updateNodeConfiguration(String nodeName, EntityManager em)
+    static void updateNodeConfiguration(String nodeName, Profile p, EntityManager em)
     {
         // Node
         Node n = null;
@@ -429,6 +429,7 @@ final class Helpers
             em.getTransaction().begin();
 
             n = new Node();
+            n.setProfile(p);
             n.setDlRepo(System.getProperty("user.dir") + "/outputfiles/");
             n.setName(nodeName);
             n.setPort(0);
@@ -494,6 +495,7 @@ final class Helpers
             q.setDescription("default queue");
             q.setTimeToLive(1024);
             q.setName("DEFAULT");
+            q.setProfile(p);
             em.persist(q);
 
             jqmlogger.info("A default queue was created in the configuration");
@@ -562,6 +564,7 @@ final class Helpers
             res.setName("mail/default");
             res.setType("javax.mail.Session");
             res.setSingleton(true);
+            res.setProfile(p);
             em.persist(res);
 
             JndiObjectResourceParameter prm = new JndiObjectResourceParameter();

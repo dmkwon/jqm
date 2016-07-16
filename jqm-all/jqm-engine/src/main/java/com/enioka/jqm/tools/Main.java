@@ -194,7 +194,7 @@ public class Main
             // Create node
             else if (line.getOptionValue(o61.getOpt()) != null)
             {
-                createEngine(line.getOptionValue(o61.getOpt()));
+                createEngine(line.getOptionValue(o61.getOpt()), line.getOptionValue(o151.getOpt()));
             }
             // Upgrade
             else if (line.hasOption(o81.getOpt()))
@@ -321,20 +321,49 @@ public class Main
         }
     }
 
-    private static void createEngine(String nodeName)
+    private static void createEngine(String nodeName, String profileName)
     {
+        EntityManager em = null;
+        Profile p = null;
         try
         {
+            em = Helpers.getNewEm();
+            if (profileName == null || profileName.isEmpty())
+            {
+                if (em.createQuery("SELECT COUNT(p) FROM Profile p", Long.class).getSingleResult() != 1)
+                {
+                    jqmlogger.fatal(
+                            "Trying to import a queue descriptor without specifying destination profile is only possible when there is only one profile");
+                    return;
+                }
+                p = em.createQuery("SELECT p FROM Profile p", Profile.class).getSingleResult();
+            }
+            else
+            {
+                try
+                {
+                    p = em.createQuery("SELECT p FROM Profile p WHERE p.name=:n", Profile.class).setParameter("n", profileName)
+                            .getSingleResult();
+                }
+                catch (NoResultException ex)
+                {
+                    jqmlogger.fatal("There is no profile named " + profileName);
+                    return;
+                }
+            }
+            
             Helpers.allowCreateSchema();
             jqmlogger.info("Creating engine node " + nodeName);
-            EntityManager em = Helpers.getNewEm();
             Helpers.updateConfiguration(em);
-            Helpers.updateNodeConfiguration(nodeName, em);
-            em.close();
+            Helpers.updateNodeConfiguration(nodeName,p, em);
         }
         catch (Exception e)
         {
             throw new JqmRuntimeException("Could not create the engine", e);
+        }
+        finally
+        {
+            Helpers.closeQuietly(em);
         }
     }
 
