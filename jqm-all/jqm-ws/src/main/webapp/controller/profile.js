@@ -31,6 +31,13 @@ jqmControllers.controller('µProfileListCtrl', function($scope, $http, µProfile
             $scope.items.splice($scope.items.indexOf(q), 1);
         }
     };
+    
+    $scope.newProfile = function()
+    {
+    	var n = {description: "short description", name: "new profile"};
+    	$scope.items.push(n);
+    	$scope.selected[0] = n;
+    }
 
     $scope.filterOptions = {
         filterText : '',

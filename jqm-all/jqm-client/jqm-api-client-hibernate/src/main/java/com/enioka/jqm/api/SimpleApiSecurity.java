@@ -67,8 +67,9 @@ final class SimpleApiSecurity
         {
             try
             {
-                GlobalParameter gp = em.createQuery("SELECT gp from GlobalParameter gp WHERE gp.key = 'enableWsApiAuth'",
-                        GlobalParameter.class).getSingleResult();
+                GlobalParameter gp = em
+                        .createQuery("SELECT gp from GlobalParameter gp WHERE gp.key = 'enableWsApiAuth'", GlobalParameter.class)
+                        .getSingleResult();
                 useAuth = Boolean.parseBoolean(gp.getValue());
             }
             catch (NoResultException e)
@@ -123,19 +124,15 @@ final class SimpleApiSecurity
                     logindata.usr = user.getLogin();
 
                     RRole r = em.createQuery("SELECT r from RRole r where r.name = 'administrator'", RRole.class).getSingleResult();
-                    r.getUsers().add(user);
+                    user.addRoleGlobal(r, em);
 
-                    // Purge all old internal accounts
-                    for (RUser ru : em.createQuery("SELECT u FROM RUser u WHERE u.internal = true AND u.expirationDate < :n", RUser.class)
+                    // Purge all old internal accounts. Use a loop since JPA cannot do CASCADE the way we want (with unidirectional
+                    // relation).
+                    for (RUser u : em.createQuery("SELECT u FROM RUser u WHERE u.internal = true AND u.expirationDate < :n", RUser.class)
                             .setParameter("n", Calendar.getInstance()).getResultList())
                     {
-                        // Not using DELETE query but a remove in a loop because two-ways M2M relationship are stupid in JPA.
-                        for (RRole rr : ru.getRoles())
-                        {
-                            rr.getUsers().remove(ru);
-                        }
-                        ru.getRoles().clear();
-                        em.remove(ru);
+                        u.clearRoles(em);
+                        em.remove(u);
                     }
 
                     em.getTransaction().commit();

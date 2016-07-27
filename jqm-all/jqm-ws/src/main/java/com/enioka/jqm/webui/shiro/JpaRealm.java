@@ -34,8 +34,8 @@ import org.apache.shiro.util.ByteSource;
 
 import com.enioka.jqm.api.Helpers;
 import com.enioka.jqm.jpamodel.RPermission;
-import com.enioka.jqm.jpamodel.RRole;
 import com.enioka.jqm.jpamodel.RUser;
+import com.enioka.jqm.jpamodel.RUserRoleAssignment;
 
 public class JpaRealm extends AuthorizingRealm
 {
@@ -113,12 +113,13 @@ public class JpaRealm extends AuthorizingRealm
             res.setLocked(user.getLocked());
 
             // Roles
-            for (RRole r : user.getRoles())
+            for (RUserRoleAssignment a : user.getAllAssignments(em))
             {
-                res.addRole(r.getName());
-                for (RPermission p : r.getPermissions())
+                String profile = a.isGlobal() ? "*" : "" + a.getProfile().getId();
+                res.addRole(profile + ":" + a.getRole().getName());
+                for (RPermission p : a.getRole().getPermissions())
                 {
-                    res.addStringPermission(p.getName());
+                    res.addStringPermission(profile + ":" + p.getName());
                 }
             }
             return res;

@@ -28,7 +28,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 
 @Entity
@@ -45,9 +44,6 @@ public class RRole implements Serializable
 
     @Column(length = 254, name = "description", nullable = false)
     private String description;
-
-    @ManyToMany()
-    private List<RUser> users = new ArrayList<RUser>();
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "role")
     private List<RPermission> permissions = new ArrayList<RPermission>();
@@ -86,16 +82,6 @@ public class RRole implements Serializable
     public void setName(String name)
     {
         this.name = name;
-    }
-
-    public List<RUser> getUsers()
-    {
-        return users;
-    }
-
-    void setUsers(List<RUser> users)
-    {
-        this.users = users;
     }
 
     public List<RPermission> getPermissions()

@@ -117,7 +117,8 @@ public class Main
                 .withDescription("resource parameter file to use. Default is resources.xml").withLongOpt("resources").create("p");
         Option o141 = OptionBuilder.withArgName("login,password,role1,role2,...").hasArgs(Option.UNLIMITED_VALUES).withValueSeparator(',')
                 .withDescription("Create or update a JQM account. Roles must exist beforehand.").create("U");
-        Option o151 = OptionBuilder.withArgName("profile").hasArg().withDescription("The profile in which to work. Can be ignored if only one profile exists").create("x");
+        Option o151 = OptionBuilder.withArgName("profile").hasArg()
+                .withDescription("The profile in which to work. Can be ignored if only one profile exists").create("x");
 
         Options options = new Options();
         OptionGroup og1 = new OptionGroup();
@@ -327,7 +328,10 @@ public class Main
         Profile p = null;
         try
         {
+            Helpers.allowCreateSchema();
             em = Helpers.getNewEm();
+            Helpers.updateConfiguration(em);
+
             if (profileName == null || profileName.isEmpty())
             {
                 if (em.createQuery("SELECT COUNT(p) FROM Profile p", Long.class).getSingleResult() != 1)
@@ -351,11 +355,9 @@ public class Main
                     return;
                 }
             }
-            
-            Helpers.allowCreateSchema();
+
             jqmlogger.info("Creating engine node " + nodeName);
-            Helpers.updateConfiguration(em);
-            Helpers.updateNodeConfiguration(nodeName,p, em);
+            Helpers.updateNodeConfiguration(nodeName, p, em);
         }
         catch (Exception e)
         {
@@ -408,7 +410,7 @@ public class Main
         try
         {
             em = Helpers.getNewEm();
-            
+
             if (profileName == null || profileName.isEmpty())
             {
                 if (em.createQuery("SELECT COUNT(p) FROM Profile p", Long.class).getSingleResult() != 1)
@@ -432,7 +434,7 @@ public class Main
                     return;
                 }
             }
-            
+
             XmlQueueParser.parse(xmlPath, p, em);
         }
         catch (Exception ex)

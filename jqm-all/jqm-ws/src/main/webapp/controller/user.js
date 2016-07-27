@@ -2,10 +2,11 @@
 
 var jqmControllers = angular.module('jqmControllers');
 
-jqmControllers.controller('µUserListCtrl', function($scope, $http, µUserDto, µRoleDto)
+jqmControllers.controller('µUserListCtrl', function($scope, $http, µUserDto, µRoleDto, µProfileDto)
 {
     $scope.users = null;
     $scope.roles = null;
+    $scope.profiles = null;
     $scope.selected = [];
     $scope.minDate = new Date();
     $scope.opened = false;
@@ -67,6 +68,7 @@ jqmControllers.controller('µUserListCtrl', function($scope, $http, µUserDto, �
         $scope.selected.length = 0;
         $scope.users = µUserDto.query($scope.refreshdone);
         $scope.roles = µRoleDto.query();
+        $scope.profiles = µProfileDto.query();
     };
 
     $scope.dateOptions = {
@@ -81,6 +83,42 @@ jqmControllers.controller('µUserListCtrl', function($scope, $http, µUserDto, �
 
         $scope.opened = true;
     };
+    
+    $scope.onAddAssignment = function()
+    {
+    	var newA = {roleId: $scope.newRole.id, profileId: $scope.newProfile ? $scope.newProfile.id : null};
+    	// Avoid doubles
+    	var found = false;
+    	$.each($scope.usr.roles, function() {
+    		if (this.roleId ===  newA.roleId && this.profileId === newA.profileId)
+			{
+    			found = true;
+    			return;
+			}
+    	});
+    	if (found)
+		{
+    		return;
+		}
+    	
+        $scope.usr.roles.push(newA);
+    }
+    
+    $scope.onRemoveAssignment = function(roleId, profileId)
+    {
+    	var found = null;
+    	$.each($scope.usr.roles, function() {
+    		if (this.roleId ===  roleId && this.profileId === profileId)
+			{
+    			found = this;
+    			return;
+			}
+    	});
+    	if (this)
+		{
+    		$scope.usr.roles.splice($scope.usr.roles.indexOf(found), 1);
+		}
+    }
 
     $scope.refresh();
 });

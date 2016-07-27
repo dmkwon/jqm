@@ -32,6 +32,7 @@ import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
 import com.enioka.jqm.jpamodel.RUser;
+import com.enioka.jqm.jpamodel.RUserRoleAssignment;
 import com.enioka.jqm.webui.admin.dto.GlobalParameterDto;
 import com.enioka.jqm.webui.admin.dto.JndiObjectResourceDto;
 import com.enioka.jqm.webui.admin.dto.ParameterDto;
@@ -42,6 +43,7 @@ import com.enioka.jqm.webui.admin.dto.QueueDto;
 import com.enioka.jqm.webui.admin.dto.QueueMappingDto;
 import com.enioka.jqm.webui.admin.dto.RRoleDto;
 import com.enioka.jqm.webui.admin.dto.RUserDto;
+import com.enioka.jqm.webui.admin.dto.RoleMappingDto;
 
 @SuppressWarnings("unchecked")
 public class Jpa2Dto
@@ -76,7 +78,7 @@ public class Jpa2Dto
         }
         else if (o instanceof RUser)
         {
-            return (D) getDTO((RUser) o);
+            return (D) getDTO((RUser) o, em);
         }
         else if (o instanceof RRole)
         {
@@ -197,7 +199,7 @@ public class Jpa2Dto
         return res;
     }
 
-    private static RUserDto getDTO(RUser d)
+    private static RUserDto getDTO(RUser d, EntityManager em)
     {
         RUserDto res = new RUserDto();
         res.setCreationDate(d.getCreationDate());
@@ -210,9 +212,12 @@ public class Jpa2Dto
         res.setEmail(d.getEmail());
         res.setInternal(d.getInternal());
 
-        for (RRole r : d.getRoles())
+        for (RUserRoleAssignment a : d.getAllAssignments(em))
         {
-            res.getRoles().add(r.getId());
+            RoleMappingDto mDto = new RoleMappingDto();
+            mDto.setRoleId(a.getRole().getId());
+            mDto.setProfileId(a.isGlobal() ? null : a.getProfile().getId());
+            res.getRoles().add(mDto);
         }
 
         return res;
@@ -232,7 +237,7 @@ public class Jpa2Dto
 
         return res;
     }
-    
+
     private static ProfileDto getDTO(Profile p)
     {
         ProfileDto res = new ProfileDto();

@@ -55,6 +55,14 @@ jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPerm
         label : '<span class="glyphicon glyphicon-home"></span> Home',
         permission : '',
     }, {
+        link : '#/prm',
+        label : '<span class="glyphicon glyphicon-wrench"></span> Cluster-wide parameters',
+        permission : 'prm:read',
+    }, {
+        link : '#/profile',
+        label : '<span class="glyphicon glyphicon-folder-close"></span> Profiles',
+        permission : 'profile:read',
+    },{
         link : '#/node',
         label : '<span class="glyphicon glyphicon-tower"></span> Nodes',
         permission : 'node:read',
@@ -71,10 +79,6 @@ jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPerm
         label : '<span class="glyphicon glyphicon-cog"></span> JNDI Resources',
         permission : 'jndi:read',
     }, {
-        link : '#/prm',
-        label : '<span class="glyphicon glyphicon-wrench"></span> Cluster-wide parameters',
-        permission : 'prm:read',
-    }, {
         link : '#/jd',
         label : '<span class="glyphicon glyphicon-list-alt"></span> Job definitions',
         permission : 'jd:read',
@@ -90,11 +94,7 @@ jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPerm
         link : '#/history',
         label : '<span class="glyphicon glyphicon-eye-open"></span> Runs',
         permission : 'job_instance:read',
-    }, {
-        link : '#/profile',
-        label : '<span class="glyphicon glyphicon-eye-open"></span> Profiles',
-        permission : 'profile:read',
-    }, ];
+    },  ];
 
     $scope.selectedTab = $scope.tabs[0];
     var i = 0;

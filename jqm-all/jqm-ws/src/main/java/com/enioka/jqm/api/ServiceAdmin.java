@@ -17,6 +17,7 @@ package com.enioka.jqm.api;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -66,14 +67,24 @@ public class ServiceAdmin
     // Common methods
     // ////////////////////////////////////////////////////////////////////////
 
-    private <J, D> List<D> getDtoList(Class<J> jpaClass)
+    private <J, D> List<D> getDtoList(Class<J> jpaClass, Integer... profilesIds)
     {
         List<D> res = new ArrayList<D>();
         EntityManager em = Helpers.getEm();
 
         try
         {
-            List<J> r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n", jpaClass).getResultList();
+            List<J> r = null;
+            if (profilesIds.length > 0)
+            {
+                List<Integer> k = Arrays.asList(profilesIds); 
+                r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n WHERE n.profile.id IN :p", jpaClass).setParameter("p", Arrays.asList(profilesIds)).getResultList();
+            }
+            else
+            {
+                r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n", jpaClass).getResultList();
+            }
+            
             for (J n : r)
             {
                 res.add(Jpa2Dto.<D> getDTO(n, em));
@@ -198,6 +209,15 @@ public class ServiceAdmin
     public List<NodeDto> getNodes()
     {
         return getDtoList(Node.class);
+    }
+    
+    @GET
+    @Path("profile/{profileId}/node")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache("public, max-age=60")
+    public List<NodeDto> getNodesProfile(@PathParam("profileId") int profileId)
+    {
+        return getDtoList(Node.class, profileId);
     }
 
     @GET
@@ -621,16 +641,18 @@ public class ServiceAdmin
         }
         else
         {
-            RUser memyselfandi = em.createQuery("SELECT u FROM RUser u WHERE u.login = :l", RUser.class)
-                    .setParameter("l", req.getUserPrincipal().getName()).getSingleResult();
+            res.add("*:*");
+           
 
-            for (RRole r : memyselfandi.getRoles())
+         /*  RUser memyselfandi = em.createQuery("SELECT u FROM RUser u WHERE u.login = :l", RUser.class)
+                    .setParameter("l", req.getUserPrincipal().getName()).getSingleResult();
+                      for (RRole r : memyselfandi.getRoles())
             {
                 for (RPermission p : r.getPermissions())
                 {
                     res.add(p.getName());
                 }
-            }
+            } */
         }
         em.close();
 

@@ -135,6 +135,7 @@ public class TestHelpers
         em.createQuery("DELETE JndiObjectResource WHERE 1=1").executeUpdate();
         em.createQuery("DELETE PKI WHERE 1=1").executeUpdate();
         em.createQuery("DELETE RPermission WHERE 1=1").executeUpdate();
+        em.createQuery("DELETE RUserRoleAssignment WHERE 1=1").executeUpdate();
         em.createQuery("DELETE RRole WHERE 1=1").executeUpdate();
         em.createQuery("DELETE RUser WHERE 1=1").executeUpdate();
         em.createQuery("DELETE Profile WHERE 1=1").executeUpdate();

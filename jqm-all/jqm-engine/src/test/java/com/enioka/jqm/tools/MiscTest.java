@@ -404,9 +404,9 @@ public class MiscTest extends JqmBaseTest
 
         RUser u = em.createQuery("SELECT u FROM RUser u WHERE u.login = :l", RUser.class).setParameter("l", "myuser").getSingleResult();
 
-        Assert.assertEquals(2, u.getRoles().size());
+        Assert.assertEquals(2, u.getAllAssignments(em).size());
         boolean admin = false, client = false;
-        for (RRole r : u.getRoles())
+        for (RRole r : u.getGlobalRoles(em))
         {
             if (r.getName().equals("administrator"))
             {
@@ -421,10 +421,10 @@ public class MiscTest extends JqmBaseTest
 
         Main.main(new String[] { "-U", "myuser", "mypassword", "administrator" });
         em.refresh(u);
-        Assert.assertEquals(1, u.getRoles().size());
+        Assert.assertEquals(1, u.getGlobalRoles(em).size());
 
         Main.main(new String[] { "-U", "myuser,mypassword,administrator,config admin" });
         em.refresh(u);
-        Assert.assertEquals(2, u.getRoles().size());
+        Assert.assertEquals(2, u.getGlobalRoles(em).size());
     }
 }

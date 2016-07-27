@@ -45,19 +45,24 @@
                             </select>
                             <label> objects of type </label>
                             <select ng-model="noun">
-                                <option value="node">node</option>
-                                <option value="queue">queue</option>
-                                <option value="qmapping">mapping</option>
-                                <option value="jndi">JNDI resource</option>
-                                <option value="prm">parameter</option>
-                                <option value="jd">job definition</option>
-                                <option value="user">user</option>
-                                <option value="role">role</option>
-                                <option value="job_instance">history and queue content</option>
-                                <option value="logs">job log files</option>
-                                <option value="queue_position">job position in queue</option>
-                                <option value="files">files produced</option>
-                                <option value="*">all types</option>
+                            	<optgroup label="Global objects of the cluster">
+                            		<option value="user">user</option>
+                            		<option value="role">role</option>
+                            		<option value="profile">profile</option>
+                            		<option value="prm">cluster-wide parameter</option>
+                            		<option value="*">all objects (global and profiles)</option>
+                            	</optgroup>
+                            	<optgroup label="Profile objects">
+	                                <option value="node">node</option>
+	                                <option value="queue">queue</option>
+	                                <option value="qmapping">mapping</option>
+	                                <option value="jndi">JNDI resource</option>
+	                                <option value="jd">job definition</option>
+	                                <option value="job_instance">history and queue content</option>
+	                                <option value="logs">job log files</option>
+	                                <option value="queue_position">job position in queue</option>
+	                                <option value="files">files produced</option>
+                                </optgroup>
                             </select>
                             <button class="btn btn-default" ng-click="addperm()"><span class="glyphicon glyphicon-plus"></span> add permission</button>
                         </div>

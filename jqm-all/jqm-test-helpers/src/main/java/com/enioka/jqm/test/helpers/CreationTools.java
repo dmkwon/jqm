@@ -513,8 +513,7 @@ public class CreationTools
 
         for (RRole r : roles)
         {
-            u.getRoles().add(r);
-            r.getUsers().add(u);
+            u.addRoleGlobal(r, em);
         }
         em.getTransaction().commit();
         return u;

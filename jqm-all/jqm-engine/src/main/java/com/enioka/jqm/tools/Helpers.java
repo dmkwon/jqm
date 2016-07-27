@@ -477,14 +477,14 @@ final class Helpers
             p.setDescription("default profile");
             p.setName("default");
             em.persist(p);
-            
+
             jqmlogger.info("A default profile was created in the configuration");
         }
         else
         {
             p = em.createQuery("SELECT p FROM Profile p", Profile.class).getSingleResult();
         }
-        
+
         // Default queue
         Queue q = null;
         i = (Long) em.createQuery("SELECT COUNT(qu) FROM Queue qu").getSingleResult();
@@ -547,7 +547,7 @@ final class Helpers
                 "logs:read", "files:read");
 
         // Users
-        createUserIfMissing(em, "root", "all powerfull user", adminr);
+        createUserIfMissing(em, "root", "all powerful user", adminr);
 
         // Mail session
         i = (Long) em.createQuery("SELECT COUNT(r) FROM JndiObjectResource r WHERE r.name = :nn").setParameter("nn", "mail/default")
@@ -620,15 +620,11 @@ final class Helpers
             em.persist(res);
         }
         res.setLocked(false);
-        for (RRole r : res.getRoles())
-        {
-            r.getUsers().remove(res);
-        }
-        res.getRoles().clear();
+
+        res.clearRoles(em);
         for (RRole r : roles)
         {
-            res.getRoles().add(r);
-            r.getUsers().add(res);
+            res.addRoleGlobal(r, em);
         }
 
         return res;

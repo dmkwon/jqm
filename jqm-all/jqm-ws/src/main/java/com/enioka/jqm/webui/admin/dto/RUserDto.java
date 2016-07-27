@@ -40,8 +40,8 @@ public class RUserDto implements Serializable
     private String email;
 
     @XmlElementWrapper(name = "roles")
-    @XmlElement(name = "role", type = Integer.class)
-    private List<Integer> roles = new ArrayList<Integer>();
+    @XmlElement(name = "role", type = RoleMappingDto.class)
+    private List<RoleMappingDto> roles = new ArrayList<RoleMappingDto>();
 
     public Integer getId()
     {
@@ -133,12 +133,12 @@ public class RUserDto implements Serializable
         this.email = email;
     }
 
-    public List<Integer> getRoles()
+    public List<RoleMappingDto> getRoles()
     {
         return roles;
     }
 
-    void setRoles(List<Integer> roles)
+    void setRoles(List<RoleMappingDto> roles)
     {
         this.roles = roles;
     }

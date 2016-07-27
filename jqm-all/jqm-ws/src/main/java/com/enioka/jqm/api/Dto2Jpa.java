@@ -48,6 +48,7 @@ import com.enioka.jqm.webui.admin.dto.QueueDto;
 import com.enioka.jqm.webui.admin.dto.QueueMappingDto;
 import com.enioka.jqm.webui.admin.dto.RRoleDto;
 import com.enioka.jqm.webui.admin.dto.RUserDto;
+import com.enioka.jqm.webui.admin.dto.RoleMappingDto;
 
 class Dto2Jpa
 {
@@ -380,20 +381,32 @@ class Dto2Jpa
         jpa = em.merge(jpa);
 
         RRole r = null;
-        for (RRole ex : jpa.getRoles())
+        Profile pr = null;
+        jpa.clearRoles(em);
+        for (RoleMappingDto mapping : dto.getRoles())
         {
-            ex.getUsers().remove(jpa);
-            // jpa.getRoles().remove(ex);
-        }
-        for (Integer rid : dto.getRoles())
-        {
-            r = em.find(RRole.class, rid);
+            r = em.find(RRole.class, mapping.getRoleId());
             if (r == null)
             {
                 throw new ErrorDto("Trying to associate an account with a non-existing role", "", 4, Status.BAD_REQUEST);
             }
-            jpa.getRoles().add(r);
-            r.getUsers().add(jpa);
+
+            if (mapping.getProfileId() != null)
+            {
+                // Assignment scoped to a profile
+                pr = em.find(Profile.class, mapping.getProfileId());
+                if (pr == null)
+                {
+                    throw new ErrorDto("Trying to associate an account with a non-existing profile", "", 5, Status.BAD_REQUEST);
+                }
+
+                jpa.addRoleProfile(r, pr, em);
+            }
+            else
+            {
+                // Global assignment
+                jpa.addRoleGlobal(r, em);
+            }
         }
 
         if (dto.getNewPassword() != null && !dto.getNewPassword().isEmpty())
@@ -490,11 +503,7 @@ class Dto2Jpa
         }
         else if (jpa instanceof RUser)
         {
-            for (RRole r : em.createQuery("SELECT r FROM RRole r WHERE :u MEMBER OF r.users", RRole.class).setParameter("u", jpa)
-                    .getResultList())
-            {
-                r.getUsers().remove(jpa);
-            }
+            em.createQuery("DELETE FROM RUserRoleAssignment a where a.user = :n").setParameter("n", jpa).executeUpdate();
         }
         else if (jpa instanceof RRole)
         {
@@ -506,15 +515,16 @@ class Dto2Jpa
         }
         else if (jpa instanceof Profile)
         {
-            for (Node n: em.createQuery("SELECT n FROM Node n WHERE n.profile = :p", Node.class).setParameter("p", jpa).getResultList())
+            for (Node n : em.createQuery("SELECT n FROM Node n WHERE n.profile = :p", Node.class).setParameter("p", jpa).getResultList())
             {
                 clean(n, em);
             }
-            for (JobDef n: em.createQuery("SELECT n FROM JobDef n WHERE n.profile = :p", JobDef.class).setParameter("p", jpa).getResultList())
+            for (JobDef n : em.createQuery("SELECT n FROM JobDef n WHERE n.profile = :p", JobDef.class).setParameter("p", jpa)
+                    .getResultList())
             {
                 clean(n, em);
             }
-            for (Queue n: em.createQuery("SELECT n FROM Queue n WHERE n.profile = :p", Queue.class).setParameter("p", jpa).getResultList())
+            for (Queue n : em.createQuery("SELECT n FROM Queue n WHERE n.profile = :p", Queue.class).setParameter("p", jpa).getResultList())
             {
                 clean(n, em);
             }
@@ -522,7 +532,7 @@ class Dto2Jpa
 
         // Other types do not have relationships needing cleaning up.
     }
-    
+
     private static Profile setJpa(EntityManager em, ProfileDto dto)
     {
         Profile jpa = null;
@@ -536,7 +546,7 @@ class Dto2Jpa
             jpa = em.find(Profile.class, dto.getId());
         }
 
-        // Update or set fields        
+        // Update or set fields
         jpa.setDescription(dto.getDescription());
         jpa.setName(dto.getName());
 
