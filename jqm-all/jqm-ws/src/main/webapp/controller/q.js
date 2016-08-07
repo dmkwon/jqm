@@ -2,7 +2,7 @@
 
 var jqmControllers = angular.module('jqmControllers');
 
-jqmControllers.controller('µQueueListCtrl', function($scope, $http, µQueueDto)
+jqmControllers.controller('µQueueListCtrl', function($scope, $http, µQueueDto, selectedProfile)
 {
     $scope.queues = null;
     $scope.sortvar = 'name';
@@ -79,10 +79,9 @@ jqmControllers.controller('µQueueListCtrl', function($scope, $http, µQueueDto)
         } ]
     };
 
-    $scope.refresh();
+    $scope.$on('profile:updated', function(event,data) 
+	{
+    	$scope.refresh();
+	});
+    if (selectedProfile.id !== -1) { $scope.refresh(); }
 });
-
-/*
- * jqmControllers.controller('NodeDetailCtrl', [ '$scope', '$routeParams', 'µNodeItem', function($scope, $routeParams, µNodeItem) { $scope.nodeId =
- * $routeParams.nodeId; $scope.node = µNodeItem.get( { nodeId : $routeParams.nodeId }); } ]);
- */

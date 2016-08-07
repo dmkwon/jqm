@@ -5,7 +5,7 @@ var jqmControllers = angular.module('jqmControllers');
 jqmControllers
         .controller(
                 'µQueueMappingListCtrl',
-                function($scope, $http, µQueueMappingDto, µQueueDto, µNodeDto)
+                function($scope, $http, µQueueMappingDto, µQueueDto, µNodeDto, selectedProfile)
                 {
                     $scope.mappings = null;
                     $scope.queues = null;
@@ -134,7 +134,11 @@ jqmControllers
                         $scope.error = null;
                     }, true);
 
-                    $scope.refresh();
+                    $scope.$on('profile:updated', function(event,data) 
+            		{
+            	    	$scope.refresh();
+            		});
+            	    if (selectedProfile.id !== -1) { $scope.refresh(); }
                 });
 
 jqmControllers.filter('getByProperty', function()

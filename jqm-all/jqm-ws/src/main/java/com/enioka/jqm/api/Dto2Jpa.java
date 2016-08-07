@@ -58,11 +58,11 @@ class Dto2Jpa
     }
 
     @SuppressWarnings("unchecked")
-    static <J> J setJpa(Object dto, EntityManager em)
+    static <J> J setJpa(Object dto, Integer profileId, EntityManager em)
     {
         if (dto instanceof JobDefDto)
         {
-            return (J) setJpa(em, (JobDefDto) dto);
+            return (J) setJpa(em, profileId, (JobDefDto) dto);
         }
         else if (dto instanceof GlobalParameterDto)
         {
@@ -70,15 +70,15 @@ class Dto2Jpa
         }
         else if (dto instanceof JndiObjectResourceDto)
         {
-            return (J) setJpa(em, (JndiObjectResourceDto) dto);
+            return (J) setJpa(em, profileId, (JndiObjectResourceDto) dto);
         }
         else if (dto instanceof QueueMappingDto)
         {
-            return (J) setJpa(em, (QueueMappingDto) dto);
+            return (J) setJpa(em, profileId, (QueueMappingDto) dto);
         }
         else if (dto instanceof QueueDto)
         {
-            return (J) setJpa(em, (QueueDto) dto);
+            return (J) setJpa(em, profileId, (QueueDto) dto);
         }
         else if (dto instanceof RUserDto)
         {
@@ -90,7 +90,7 @@ class Dto2Jpa
         }
         else if (dto instanceof NodeDto)
         {
-            return (J) setJpa(em, (NodeDto) dto);
+            return (J) setJpa(em, profileId, (NodeDto) dto);
         }
         else if (dto instanceof ProfileDto)
         {
@@ -99,40 +99,51 @@ class Dto2Jpa
         return null;
     }
 
-    private static Node setJpa(EntityManager em, NodeDto dto)
+    private static Node setJpa(EntityManager em, Integer profileId, NodeDto dto)
     {
-        Node n = null;
-
-        if (dto.getId() == null)
+        Node jpa = null;
+        if (dto.getId() != null)
         {
-            n = new Node();
+            jpa = em.find(Node.class, dto.getId());
+            if (jpa.getProfile().getId() != profileId)
+            {
+                jpa = null;
+            }
         }
-        else
+        if (jpa == null)
         {
-            n = em.find(Node.class, dto.getId());
+            jpa = new Node();
+            jpa.setProfile(em.find(Profile.class, profileId));
+        }
+
+        Profile p = em.find(Profile.class, dto.getProfileId());
+        if (p == null)
+        {
+            throw new IllegalArgumentException("wrong profile");
         }
 
         // Update or set fields
-        n.setDns(dto.getDns());
-        n.setDlRepo(dto.getOutputDirectory());
-        n.setJmxRegistryPort(dto.getJmxRegistryPort());
-        n.setJmxServerPort(dto.getJmxServerPort());
-        n.setName(dto.getName());
-        n.setPort(dto.getPort());
-        n.setRepo(dto.getJobRepoDirectory());
-        n.setRootLogLevel(dto.getRootLogLevel());
-        n.setStop(dto.getStop());
-        n.setLoadApiAdmin(dto.getLoadApiAdmin());
-        n.setLoadApiClient(dto.getLoadApiClient());
-        n.setLoapApiSimple(dto.getLoapApiSimple());
-        n.setTmpDirectory(dto.getTmpDirectory());
-        n.setEnabled(dto.getEnabled());
+        jpa.setDns(dto.getDns());
+        jpa.setDlRepo(dto.getOutputDirectory());
+        jpa.setJmxRegistryPort(dto.getJmxRegistryPort());
+        jpa.setJmxServerPort(dto.getJmxServerPort());
+        jpa.setName(dto.getName());
+        jpa.setPort(dto.getPort());
+        jpa.setRepo(dto.getJobRepoDirectory());
+        jpa.setRootLogLevel(dto.getRootLogLevel());
+        jpa.setStop(dto.getStop());
+        jpa.setLoadApiAdmin(dto.getLoadApiAdmin());
+        jpa.setLoadApiClient(dto.getLoadApiClient());
+        jpa.setLoapApiSimple(dto.getLoapApiSimple());
+        jpa.setTmpDirectory(dto.getTmpDirectory());
+        jpa.setEnabled(dto.getEnabled());
+        jpa.setProfile(p); // TODO: check the user has W permissions on this profile.
 
         // save
-        n = em.merge(n);
+        jpa = em.merge(jpa);
 
         // Done
-        return n;
+        return jpa;
     }
 
     private static GlobalParameter setJpa(EntityManager em, GlobalParameterDto dto)
@@ -159,17 +170,21 @@ class Dto2Jpa
         return n;
     }
 
-    private static JobDef setJpa(EntityManager em, JobDefDto dto)
+    private static JobDef setJpa(EntityManager em, Integer profileId, JobDefDto dto)
     {
         JobDef jpa = null;
-
-        if (dto.getId() == null)
-        {
-            jpa = new JobDef();
-        }
-        else
+        if (dto.getId() != null)
         {
             jpa = em.find(JobDef.class, dto.getId());
+            if (jpa.getProfile().getId() != profileId)
+            {
+                jpa = null;
+            }
+        }
+        if (jpa == null)
+        {
+            jpa = new JobDef();
+            jpa.setProfile(em.find(Profile.class, profileId));
         }
 
         jpa.setApplication(dto.getApplication());
@@ -236,17 +251,21 @@ class Dto2Jpa
         return jpa;
     }
 
-    private static JndiObjectResource setJpa(EntityManager em, JndiObjectResourceDto dto)
+    private static JndiObjectResource setJpa(EntityManager em, Integer profileId, JndiObjectResourceDto dto)
     {
         JndiObjectResource jpa = null;
-
-        if (dto.getId() == null)
-        {
-            jpa = new JndiObjectResource();
-        }
-        else
+        if (dto.getId() != null)
         {
             jpa = em.find(JndiObjectResource.class, dto.getId());
+            if (jpa.getProfile().getId() != profileId)
+            {
+                jpa = null;
+            }
+        }
+        if (jpa == null)
+        {
+            jpa = new JndiObjectResource();
+            jpa.setProfile(em.find(Profile.class, profileId));
         }
 
         jpa.setAuth(dto.getAuth());
@@ -306,17 +325,16 @@ class Dto2Jpa
         return jpa;
     }
 
-    private static DeploymentParameter setJpa(EntityManager em, QueueMappingDto dto)
+    private static DeploymentParameter setJpa(EntityManager em, Integer profileId, QueueMappingDto dto)
     {
         DeploymentParameter jpa = null;
-
-        if (dto.getId() == null)
-        {
-            jpa = new DeploymentParameter();
-        }
-        else
+        if (dto.getId() != null)
         {
             jpa = em.find(DeploymentParameter.class, dto.getId());
+        }
+        if (jpa == null)
+        {
+            jpa = new DeploymentParameter();
         }
 
         // Update or set fields
@@ -326,6 +344,12 @@ class Dto2Jpa
         jpa.setQueue(em.find(Queue.class, dto.getQueueId()));
         jpa.setEnabled(dto.getEnabled());
 
+        // Security check
+        if (jpa.getQueue().getProfile().getId() != profileId || jpa.getNode().getProfile().getId() != profileId)
+        {
+            throw new IllegalArgumentException("mismatch - trying to deploy queues cross-profiles");
+        }
+
         // Save
         jpa = em.merge(jpa);
 
@@ -333,17 +357,21 @@ class Dto2Jpa
         return jpa;
     }
 
-    private static Queue setJpa(EntityManager em, QueueDto dto)
+    private static Queue setJpa(EntityManager em, Integer profileId, QueueDto dto)
     {
         Queue jpa = null;
-
-        if (dto.getId() == null)
-        {
-            jpa = new Queue();
-        }
-        else
+        if (dto.getId() != null)
         {
             jpa = em.find(Queue.class, dto.getId());
+            if (jpa.getProfile().getId() != profileId)
+            {
+                jpa = null;
+            }
+        }
+        if (jpa == null)
+        {
+            jpa = new Queue();
+            jpa.setProfile(em.find(Profile.class, profileId));
         }
 
         // Update or set fields

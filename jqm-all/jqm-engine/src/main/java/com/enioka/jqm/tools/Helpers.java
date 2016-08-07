@@ -536,13 +536,13 @@ final class Helpers
         // Roles
         RRole adminr = createRoleIfMissing(em, "administrator", "all permissions without exception", "*:*");
         createRoleIfMissing(em, "config admin", "can read and write all configuration, except security configuration", "node:*", "queue:*",
-                "qmapping:*", "jndi:*", "prm:*", "jd:*");
+                "qmapping:*", "jndi:*", "prm:*", "jd:*", "profile:*");
         createRoleIfMissing(em, "config viewer", "can read all configuration except for security configuration", "node:read", "queue:read",
-                "qmapping:read", "jndi:read", "prm:read", "jd:read");
+                "qmapping:read", "jndi:read", "prm:read", "jd:read", "profile:read");
         createRoleIfMissing(em, "client", "can use the full client API except reading logs, files and altering position", "node:read",
-                "queue:read", "job_instance:*", "jd:read");
+                "queue:read", "job_instance:*", "jd:read", "profile:read");
         createRoleIfMissing(em, "client power user", "can use the full client API", "node:read", "queue:read", "job_instance:*", "jd:read",
-                "logs:read", "queue_position:create", "files:read");
+                "logs:read", "queue_position:create", "files:read", "profile:read");
         createRoleIfMissing(em, "client read only", "can query job instances and get their files", "queue:read", "job_instance:read",
                 "logs:read", "files:read");
 

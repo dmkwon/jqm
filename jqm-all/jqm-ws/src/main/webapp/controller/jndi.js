@@ -3,7 +3,7 @@
 var jqmControllers = angular.module('jqmControllers');
 
 jqmControllers.controller('µJndiListCtrl', function($scope, µJndiDto, jndiOracle, jndiFile, jndiUrl, jndiPs, jndiHsqlDb, jndiMySql, jndiMqQcf, jndiMqQ, jndiAmqQcf, jndiAmqQ,
-        jndiGeneric, jndiOtherDb, jndiString, jndiMail)
+        jndiGeneric, jndiOtherDb, jndiString, jndiMail, selectedProfile)
 {
     $scope.resources = null;
     $scope.selected = [];
@@ -185,5 +185,9 @@ jqmControllers.controller('µJndiListCtrl', function($scope, µJndiDto, jndiOrac
         }, ]
     };
 
-    $scope.refresh();
+    $scope.$on('profile:updated', function(event,data) 
+	{
+    	$scope.refresh();
+	});
+    if (selectedProfile.id !== -1) { $scope.refresh(); }
 });

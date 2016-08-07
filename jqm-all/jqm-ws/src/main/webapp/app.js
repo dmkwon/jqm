@@ -1,7 +1,7 @@
 'use strict';
 
 var jqmApp = angular.module('jqmApp', [ 'ngRoute', 'ngCookies', 'jqmControllers', 'ngGrid', 'jqmServices', 'ui.bootstrap', 'ngSanitize', 'ui.select',
-        'ngBusy', 'ui-rangeSlider' ]);
+        'ngBusy', 'ui-rangeSlider', 'jqmConstants' ]);
 
 jqmApp.config([ '$routeProvider', function($routeProvider, µPermManager)
 {
@@ -46,8 +46,10 @@ jqmApp.config([ '$routeProvider', function($routeProvider, µPermManager)
     });
 } ]);
 
-jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPermManager)
+jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, $rootScope, µPermManager, selectedProfile)
 {
+	$scope.profile = selectedProfile;
+	$scope.user = µPermManager.user;
     $http.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
     $scope.tabs = [ {
@@ -123,6 +125,14 @@ jqmApp.controller('TabsCtrl', function TabsCtrl($scope, $location, $http, µPerm
             return "";
         }
     };
+    
+    $scope.selectProfile = function(id, name)
+    {
+    	selectedProfile.id = id;
+    	selectedProfile.name = name;
+    	$rootScope.$broadcast('event:auth-loginConfirmed'); // Force an authorization re-evaluation
+    	$rootScope.$broadcast('profile:updated');
+    }
 
     µPermManager.refresh();
 });
@@ -214,9 +224,9 @@ jqmApp.config(function($httpProvider)
 // Login & permissions handling
 // /////////////////////////////////////////////////////////////////////
 
-jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, $http, httpBuffer)
+jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, $http, httpBuffer, selectedProfile)
 {
-    this.perms = [];
+    this.user = {me: null};
     var scope = this;
 
     this.init = function(login, password)
@@ -227,7 +237,8 @@ jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, 
 
     this.refresh = function()
     {
-        scope.perms = µUserPerms.get(null, this.permsok, this.permsko);
+    	scope.user.me = null;
+        scope.user.me = µUserPerms.get(null, this.permsok, this.permsko);
     };
 
     this.permsok = function(value, responseHeaders)
@@ -236,7 +247,10 @@ jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, 
         {
             return config;
         };
+        selectedProfile.id = scope.user.me.profiles[0].id;
+        selectedProfile.name = scope.user.me.profiles[0].name;
         $rootScope.$broadcast('event:auth-loginConfirmed');
+        $rootScope.$broadcast('profile:updated');
         httpBuffer.retryAll(updater);
     };
 
@@ -248,7 +262,7 @@ jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, 
     this.logout = function()
     {
         delete $http.defaults.headers.common['Authorization'];
-        scope.perms = [];
+        scope.user.me = null;
     };
 
     this.loginCancelled = function(data, reason)
@@ -256,7 +270,6 @@ jqmApp.service('µPermManager', function(µUserPerms, $cookieStore, $rootScope, 
         httpBuffer.rejectAll(reason);
         $rootScope.$broadcast('event:auth-loginCancelled', data);
     };
-
 });
 
 jqmApp.config(function($httpProvider)
@@ -405,7 +418,7 @@ jqmApp.factory('httpBuffer', [ '$injector', function($injector)
     };
 } ]);
 
-jqmApp.directive('jqmPermission', function(µPermManager)
+jqmApp.directive('jqmPermission', function(µPermManager, selectedProfile)
 {
     return {
         restrict : 'A',
@@ -415,9 +428,7 @@ jqmApp.directive('jqmPermission', function(µPermManager)
         },
         link : function(scope, element, attrs)
         {
-            var perms = µPermManager.perms;
-
-            var shouldDisplay = function()
+        	var shouldDisplay = function()
             {
                 // If the control does not ask for a particular permission,
                 // always enable it.
@@ -426,13 +437,29 @@ jqmApp.directive('jqmPermission', function(µPermManager)
                     return true;
                 }
 
+                if (! µPermManager.user.me || !µPermManager.user.me.profiles) {
+                	// No user logged in!
+                	return false;
+                }
+                
+                var profile = null;
+                $.each(µPermManager.user.me.profiles, function() {
+                	if (this.id === selectedProfile.id) {
+                		profile = this;
+                	}
+                });
+                if (!profile) {
+                	// No profile selected (or selection outside allowed profiles)
+                	return false;
+                }
+                var perms = profile.permissions;
+                
                 // If the user has no permission at all, disable the control
-                perms = µPermManager.perms.permissions;
                 if (perms == undefined || perms.length == 0)
                 {
                     return false;
                 }
-
+                
                 // The permission to look for (requested permission => r_)
                 var r_noun = scope.jqmPermission.split(":")[0];
                 var r_verb = scope.jqmPermission.split(":")[1];
@@ -479,7 +506,7 @@ jqmApp.directive('jqmPermission', function(µPermManager)
                 updatePerm();
             });
 
-            // Permission is in the for : object:verb
+            // Permission is in the form : object:verb
             updatePerm();
         }
     };

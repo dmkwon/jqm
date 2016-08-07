@@ -2,10 +2,11 @@
 
 var jqmControllers = angular.module('jqmControllers', [ 'jqmConstants', 'jqmServices', 'ui.bootstrap' ]);
 
-jqmControllers.controller('µNodeListCtrl', function($scope, $http, $modal, µNodeDto)
+jqmControllers.controller('µNodeListCtrl', function($scope, $http, $modal, µNodeDto, µProfileDto, selectedProfile)
 {
     $scope.items = null;
     $scope.selected = [];
+    $scope.profiles = µProfileDto.query();
 
     $scope.sortvar = 'jmxRegistryPort';
 
@@ -124,6 +125,12 @@ jqmControllers.controller('µNodeListCtrl', function($scope, $http, $modal, µNo
                     width : '*',
                 }, 
                 {
+                    field : 'profileId',
+                    displayName : 'Profile',
+                    cellTemplate : '<div class="ngCellText" ng-class="col.colIndex()"><span ng-cell-text>{{ (row.getProperty("profileId") | getByProperty:"id":profiles).name }}</span></div>',
+                    editableCellTemplate : '<select ng-cell-input ng-input="COL_FIELD" ng-model="COL_FIELD" ng-options="q.id as q.name for q in profiles"></select>'
+                },
+                {
                     field : 'id',
                     enableCellEdit : false,
                     displayName : '',
@@ -159,7 +166,11 @@ jqmControllers.controller('µNodeListCtrl', function($scope, $http, $modal, µNo
         });
     };
 
-    $scope.refresh();
+    $scope.$on('profile:updated', function(event,data) 
+	{
+    	$scope.refresh();
+	});
+    if (selectedProfile.id !== -1) { $scope.refresh(); }
 });
 
 jqmControllers.controller('µNodeDetailCtrl', [ '$scope', '$routeParams', 'µNodeDto', function($scope, $routeParams, µNodeDto)

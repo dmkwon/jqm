@@ -18,7 +18,9 @@ package com.enioka.jqm.api;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.servlet.http.HttpServletRequest;
@@ -48,12 +50,14 @@ import com.enioka.jqm.jpamodel.Queue;
 import com.enioka.jqm.jpamodel.RPermission;
 import com.enioka.jqm.jpamodel.RRole;
 import com.enioka.jqm.jpamodel.RUser;
+import com.enioka.jqm.jpamodel.RUserRoleAssignment;
 import com.enioka.jqm.pki.JpaCa;
 import com.enioka.jqm.webui.admin.dto.GlobalParameterDto;
 import com.enioka.jqm.webui.admin.dto.JndiObjectResourceDto;
 import com.enioka.jqm.webui.admin.dto.JobDefDto;
 import com.enioka.jqm.webui.admin.dto.NodeDto;
 import com.enioka.jqm.webui.admin.dto.PemissionsBagDto;
+import com.enioka.jqm.webui.admin.dto.PermissionsInProfileDto;
 import com.enioka.jqm.webui.admin.dto.ProfileDto;
 import com.enioka.jqm.webui.admin.dto.QueueDto;
 import com.enioka.jqm.webui.admin.dto.QueueMappingDto;
@@ -77,14 +81,15 @@ public class ServiceAdmin
             List<J> r = null;
             if (profilesIds.length > 0)
             {
-                List<Integer> k = Arrays.asList(profilesIds); 
-                r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n WHERE n.profile.id IN :p", jpaClass).setParameter("p", Arrays.asList(profilesIds)).getResultList();
+                List<Integer> k = Arrays.asList(profilesIds);
+                r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n WHERE n.profile.id IN :p", jpaClass)
+                        .setParameter("p", Arrays.asList(profilesIds)).getResultList();
             }
             else
             {
                 r = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n", jpaClass).getResultList();
             }
-            
+
             for (J n : r)
             {
                 res.add(Jpa2Dto.<D> getDTO(n, em));
@@ -144,13 +149,13 @@ public class ServiceAdmin
         }
     }
 
-    private <D> void setItem(D dto)
+    private <D> void setItem(D dto, Integer profileId)
     {
         EntityManager em = Helpers.getEm();
         try
         {
             em.getTransaction().begin();
-            Dto2Jpa.setJpa(dto, em);
+            Dto2Jpa.setJpa(dto, profileId, em);
             em.getTransaction().commit();
         }
         finally
@@ -159,12 +164,13 @@ public class ServiceAdmin
         }
     }
 
-    public <D, J> void setItems(Class<J> jpaClass, List<D> dtos)
+    public <D, J> void setItems(Class<J> jpaClass, List<D> dtos, Integer profileId)
     {
         EntityManager em = Helpers.getEm();
         try
         {
-            List<J> existBefore = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n", jpaClass).getResultList();
+            List<J> existBefore = em.createQuery("SELECT n FROM " + jpaClass.getSimpleName() + " n WHERE n.profile.id = :l", jpaClass)
+                    .setParameter("l", profileId).getResultList();
             List<J> existAfter = new ArrayList<J>();
 
             em.getTransaction().begin();
@@ -172,7 +178,7 @@ public class ServiceAdmin
             // Update or create items
             for (D dto : dtos)
             {
-                existAfter.add(Dto2Jpa.<J> setJpa(dto, em));
+                existAfter.add(Dto2Jpa.<J> setJpa(dto, profileId, em));
             }
 
             // Delete old items
@@ -210,40 +216,31 @@ public class ServiceAdmin
     {
         return getDtoList(Node.class);
     }
-    
+
     @GET
     @Path("profile/{profileId}/node")
     @Produces(MediaType.APPLICATION_JSON)
-    @HttpCache("public, max-age=60")
+    @HttpCache("no-cache")
     public List<NodeDto> getNodesProfile(@PathParam("profileId") int profileId)
     {
         return getDtoList(Node.class, profileId);
     }
 
     @GET
-    @Path("node/{id}")
+    @Path("profile/{profileId}/node/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @HttpCache("public, max-age=60")
-    public NodeDto getNode(@PathParam("id") int id)
+    public NodeDto getNode(@PathParam("id") int id, @PathParam("profileId") int profileId)
     {
-        System.out.println(SecurityUtils.getSubject().getPrincipal());
         return getDto(Node.class, id);
     }
 
     @PUT
-    @Path("node")
+    @Path("profile/{profileId}/node")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setNodes(List<NodeDto> dtos)
+    public void setNodes(List<NodeDto> dtos, @PathParam("profileId") Integer profileId)
     {
-        setItems(Node.class, dtos);
-    }
-
-    @POST
-    @Path("node")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void setNode(NodeDto dto)
-    {
-        setItem(dto);
+        setItems(Node.class, dtos, profileId);
     }
 
     // ////////////////////////////////////////////////////////////////////////
@@ -259,39 +256,49 @@ public class ServiceAdmin
         return getDtoList(Queue.class);
     }
 
+    @GET
+    @Path("profile/{profileId}/q")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public List<QueueDto> getQueues(@PathParam("profileId") Integer profileId)
+    {
+        return getDtoList(Queue.class, profileId);
+    }
+
     @PUT
-    @Path("q")
+    @Path("profile/{profileId}/q")
     @Consumes(MediaType.APPLICATION_JSON)
     @HttpCache
-    public void setQueues(List<QueueDto> dtos)
+    public void setQueues(List<QueueDto> dtos, @PathParam("profileId") Integer profileId)
     {
-        setItems(Queue.class, dtos);
+        setItems(Queue.class, dtos, profileId);
     }
 
     @GET
-    @Path("q/{id}")
+    @Path("profile/{profileId}/q/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @HttpCache
-    public QueueDto getQueue(@PathParam("id") int id)
+    public QueueDto getQueue(@PathParam("id") int id, @PathParam("profileId") Integer profileId)
     {
         return getDto(Queue.class, id);
     }
 
     @PUT
-    @Path("q/{id}")
+    @Path("profile/{profileId}/q/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setQueue(@PathParam("id") Integer id, QueueDto dto)
+    public void setQueue(@PathParam("id") Integer id, QueueDto dto, @PathParam("profileId") Integer profileId)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @POST
-    @Path("q")
+    @Path("profile/{profileId}/q")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setQueue(QueueDto dto)
+    public void setQueue(QueueDto dto, @PathParam("profileId") Integer profileId)
     {
-        setItem(dto);
+        // dto.set
+        setItem(dto, profileId);
     }
 
     @DELETE
@@ -314,42 +321,70 @@ public class ServiceAdmin
         return getDtoList(DeploymentParameter.class);
     }
 
-    @PUT
-    @Path("qmapping")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void setQueueMappings(List<QueueMappingDto> dtos)
+    @GET
+    @Path("profile/{profileId}/qmapping")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public List<QueueMappingDto> getQueueMappings(@PathParam("profileId") Integer profileId)
     {
-        setItems(DeploymentParameter.class, dtos);
+        EntityManager em = Helpers.getEm();
+        List<QueueMappingDto> res = new ArrayList<QueueMappingDto>();
+        try
+        {
+            for (DeploymentParameter n : em
+                    .createQuery("SELECT n FROM DeploymentParameter n WHERE n.queue.profile.id = :p", DeploymentParameter.class)
+                    .setParameter("p", profileId).getResultList())
+            {
+                res.add(Jpa2Dto.getDTO(n));
+            }
+            return res;
+        }
+        catch (Exception e)
+        {
+            throw new ErrorDto("The server failed to list all objects of type QueueMappingDto", 2, e, Status.INTERNAL_SERVER_ERROR);
+        }
+        finally
+        {
+            em.close();
+        }
+    }
+
+    @PUT
+    @Path("profile/{profileId}/qmapping")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setQueueMappings(List<QueueMappingDto> dtos, @PathParam("profileId") Integer profileId)
+    {
+        setItems(DeploymentParameter.class, dtos, profileId);
     }
 
     @GET
-    @Path("qmapping/{id}")
+    @Path("profile/{profileId}/qmapping/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @HttpCache
-    public QueueMappingDto getQueueMapping(@PathParam("id") int id)
+    public QueueMappingDto getQueueMapping(@PathParam("id") int id, @PathParam("profileId") Integer profileId)
     {
-        return getDto(DeploymentParameter.class, id);
+        return getDto(DeploymentParameter.class, id); // TODO: check good profile.
     }
 
     @PUT
-    @Path("qmapping/{id}")
+    @Path("profile/{profileId}/qmapping/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setQueueMapping(@PathParam("id") Integer id, QueueMappingDto dto)
+    public void setQueueMapping(@PathParam("id") Integer id, QueueMappingDto dto, @PathParam("profileId") Integer profileId)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @POST
-    @Path("qmapping")
+    @Path("profile/{profileId}/qmapping")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setQueueMapping(QueueMappingDto dto)
+    public void setQueueMapping(QueueMappingDto dto, @PathParam("profileId") Integer profileId)
     {
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @DELETE
-    @Path("qmapping/{id}")
+    @Path("profile/{profileId}/qmapping/{id}")
     public void deleteQueueMapping(@PathParam("id") Integer id)
     {
         deleteItem(DeploymentParameter.class, id);
@@ -368,43 +403,52 @@ public class ServiceAdmin
         return getDtoList(JndiObjectResource.class);
     }
 
-    @PUT
-    @Path("jndi")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void setJndiResources(List<JndiObjectResourceDto> dtos)
+    @GET
+    @Path("profile/{profileId}/jndi")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public List<JndiObjectResourceDto> getJndiResources(@PathParam("profileId") Integer profileId)
     {
-        setItems(JndiObjectResourceDto.class, dtos);
+        return getDtoList(JndiObjectResource.class, profileId);
+    }
+
+    @PUT
+    @Path("profile/{profileId}/jndi")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setJndiResources(List<JndiObjectResourceDto> dtos, @PathParam("profileId") Integer profileId)
+    {
+        setItems(JndiObjectResourceDto.class, dtos, profileId);
     }
 
     @GET
-    @Path("jndi/{id}")
+    @Path("profile/{profileId}/jndi/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @HttpCache
-    public JndiObjectResourceDto getJndiResource(@PathParam("id") Integer id)
+    public JndiObjectResourceDto getJndiResource(@PathParam("id") Integer id, @PathParam("profileId") Integer profileId)
     {
         return getDto(JndiObjectResource.class, id);
     }
 
     @PUT
-    @Path("jndi/{id}")
+    @Path("profile/{profileId}/jndi/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setJndiResource(@PathParam("id") Integer id, JndiObjectResourceDto dto)
+    public void setJndiResource(@PathParam("id") Integer id, JndiObjectResourceDto dto, @PathParam("profileId") Integer profileId)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @POST
-    @Path("jndi")
+    @Path("profile/{profileId}/jndi")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setJndiResource(JndiObjectResourceDto dto)
+    public void setJndiResource(JndiObjectResourceDto dto, @PathParam("profileId") Integer profileId)
     {
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @DELETE
-    @Path("jndi/{id}")
-    public void deleteJndiResource(@PathParam("id") Integer id)
+    @Path("profile/{profileId}/jndi/{id}")
+    public void deleteJndiResource(@PathParam("id") Integer id, @PathParam("profileId") Integer profileId)
     {
         deleteItem(JndiObjectResource.class, id);
     }
@@ -427,7 +471,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setGlobalParameters(List<GlobalParameterDto> dtos)
     {
-        setItems(GlobalParameter.class, dtos);
+        setItems(GlobalParameter.class, dtos, null);
     }
 
     @GET
@@ -445,7 +489,7 @@ public class ServiceAdmin
     public void setGlobalParameter(@PathParam("id") Integer id, GlobalParameterDto dto)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @POST
@@ -453,7 +497,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setGlobalParameter(GlobalParameterDto dto)
     {
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @DELETE
@@ -476,43 +520,52 @@ public class ServiceAdmin
         return getDtoList(JobDef.class);
     }
 
-    @PUT
-    @Path("jd")
-    @Consumes(MediaType.APPLICATION_JSON)
-    public void setJobDefs(List<JobDefDto> dtos)
+    @GET
+    @Path("profile/{profileId}/jd")
+    @Produces(MediaType.APPLICATION_JSON)
+    @HttpCache
+    public List<JobDefDto> getJobDefs(@PathParam("profileId") Integer profileId)
     {
-        setItems(JobDef.class, dtos);
+        return getDtoList(JobDef.class, profileId);
+    }
+
+    @PUT
+    @Path("profile/{profileId}/jd")
+    @Consumes(MediaType.APPLICATION_JSON)
+    public void setJobDefs(List<JobDefDto> dtos, @PathParam("profileId") Integer profileId)
+    {
+        setItems(JobDef.class, dtos, profileId);
     }
 
     @GET
-    @Path("jd/{id}")
+    @Path("profile/{profileId}/jd/{id}")
     @Produces(MediaType.APPLICATION_JSON)
     @HttpCache
-    public JobDefDto getJobDef(@PathParam("id") int id)
+    public JobDefDto getJobDef(@PathParam("id") int id, @PathParam("profileId") Integer profileId)
     {
         return getDto(JobDef.class, id);
     }
 
     @PUT
-    @Path("jd/{id}")
+    @Path("profile/{profileId}/jd/{id}")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setJobDef(@PathParam("id") Integer id, JobDefDto dto)
+    public void setJobDef(@PathParam("id") Integer id, JobDefDto dto, @PathParam("profileId") Integer profileId)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @POST
-    @Path("jd")
+    @Path("profile/{profileId}/jd")
     @Consumes(MediaType.APPLICATION_JSON)
-    public void setJobDef(JobDefDto dto)
+    public void setJobDef(JobDefDto dto, @PathParam("profileId") Integer profileId)
     {
-        setItem(dto);
+        setItem(dto, profileId);
     }
 
     @DELETE
-    @Path("jd/{id}")
-    public void deleteJobDef(@PathParam("id") Integer id)
+    @Path("profile/{profileId}/jd/{id}")
+    public void deleteJobDef(@PathParam("id") Integer id, @PathParam("profileId") Integer profileId)
     {
         deleteItem(JobDef.class, id);
     }
@@ -535,7 +588,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setUsers(List<RUserDto> dtos)
     {
-        setItems(RUser.class, dtos);
+        setItems(RUser.class, dtos, null);
     }
 
     @GET
@@ -553,7 +606,7 @@ public class ServiceAdmin
     public void setUser(@PathParam("id") Integer id, RUserDto dto)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @POST
@@ -561,7 +614,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setUser(RUserDto dto)
     {
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @DELETE
@@ -589,7 +642,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setRoles(List<RRoleDto> dtos)
     {
-        setItems(RRole.class, dtos);
+        setItems(RRole.class, dtos, null);
     }
 
     @GET
@@ -607,7 +660,7 @@ public class ServiceAdmin
     public void setRole(@PathParam("id") Integer id, RRoleDto dto)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @POST
@@ -615,7 +668,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setRole(RRoleDto dto)
     {
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @DELETE
@@ -632,33 +685,59 @@ public class ServiceAdmin
     public PemissionsBagDto getMyself(@Context HttpServletRequest req)
     {
         EntityManager em = Helpers.getEm();
-        List<String> res = new ArrayList<String>();
+        String login = req.getUserPrincipal().getName();
+        RUser u = em.createQuery("SELECT u FROM RUser u WHERE u.login=:l", RUser.class).setParameter("l", login).getSingleResult();
+        PemissionsBagDto res = new PemissionsBagDto(u);
+
         String auth = em.createQuery("SELECT gp From GlobalParameter gp where gp.key = 'enableWsApiAuth'", GlobalParameter.class)
                 .getSingleResult().getValue();
-        if (auth.equals("false"))
+        List<Profile> profiles = em.createQuery("SELECT p FROM Profile p", Profile.class).getResultList();
+        if (!auth.toLowerCase().equals("true"))
         {
-            res.add("*:*");
+            for (Profile p : profiles)
+            {
+                res.profiles.add(new PermissionsInProfileDto(p));
+                res.getProfile(p.getId()).permissions.add("*:*");
+            }
         }
         else
         {
-            res.add("*:*");
-           
+            List<RUserRoleAssignment> as = em
+                    .createQuery("SELECT a FROM RUserRoleAssignment a WHERE a.user.login = :l", RUserRoleAssignment.class)
+                    .setParameter("l", login).getResultList();
 
-         /*  RUser memyselfandi = em.createQuery("SELECT u FROM RUser u WHERE u.login = :l", RUser.class)
-                    .setParameter("l", req.getUserPrincipal().getName()).getSingleResult();
-                      for (RRole r : memyselfandi.getRoles())
+            for (RUserRoleAssignment a : as)
             {
-                for (RPermission p : r.getPermissions())
+                List<RPermission> perms = em.createQuery("SELECT p FROM RPermission p WHERE p.role=:r", RPermission.class)
+                        .setParameter("r", a.getRole()).getResultList();
+
+                List<Profile> targetProfiles = new ArrayList<Profile>();
+                if (a.isGlobal())
                 {
-                    res.add(p.getName());
+                    targetProfiles = profiles;
                 }
-            } */
+                else
+                {
+                    targetProfiles.add(a.getProfile());
+                }
+
+                for (RPermission p : perms)
+                {
+                    for (Profile pr : targetProfiles)
+                    {
+                        if (res.getProfile(pr.getId()) == null)
+                        {
+                            res.profiles.add(new PermissionsInProfileDto(pr));
+                        }
+                        res.getProfile(pr.getId()).permissions.add(p.getName());
+
+                    }
+                }
+            }
         }
         em.close();
 
-        PemissionsBagDto b = new PemissionsBagDto();
-        b.permissions = res;
-        return b;
+        return res;
     }
 
     @Path("user/{id}/certificate")
@@ -690,15 +769,15 @@ public class ServiceAdmin
     @Path("node/{nodeName}/log")
     @Produces("application/octet-stream")
     @GET
-    public InputStream getNodeLog(@PathParam("nodeName") String nodeName, @QueryParam("latest") int latest, @Context HttpServletResponse res)
+    public InputStream getNodeLog(@PathParam("nodeName") String nodeName, @QueryParam("latest") int latest,
+            @Context HttpServletResponse res)
     {
-        SelfDestructFileStream fs = (SelfDestructFileStream) ((HibernateClient) JqmClientFactory.getClient())
-                .getEngineLog(nodeName, latest);
+        SelfDestructFileStream fs = (SelfDestructFileStream) ((HibernateClient) JqmClientFactory.getClient()).getEngineLog(nodeName,
+                latest);
         res.setHeader("Content-Disposition", "attachment; filename=" + nodeName + ".log");
         return fs;
     }
-    
-    
+
     // ////////////////////////////////////////////////////////////////////////
     // Profiles
     // ////////////////////////////////////////////////////////////////////////
@@ -718,7 +797,7 @@ public class ServiceAdmin
     @HttpCache
     public void setProfiles(List<ProfileDto> dtos)
     {
-        setItems(Profile.class, dtos);
+        setItems(Profile.class, dtos, null);
     }
 
     @GET
@@ -736,7 +815,7 @@ public class ServiceAdmin
     public void setProfile(@PathParam("id") Integer id, ProfileDto dto)
     {
         dto.setId(id);
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @POST
@@ -744,7 +823,7 @@ public class ServiceAdmin
     @Consumes(MediaType.APPLICATION_JSON)
     public void setProfile(ProfileDto dto)
     {
-        setItem(dto);
+        setItem(dto, null);
     }
 
     @DELETE

@@ -111,6 +111,7 @@ public class Jpa2Dto
         res.setTmpDirectory(n.getTmpDirectory());
         res.setReportsRunning(n.getLastSeenAlive() == null ? false : n.getLastSeenAlive().after(limit));
         res.setEnabled(n.getEnabled());
+        res.setProfileId(n.getProfile().getId());
 
         return res;
     }
@@ -126,7 +127,7 @@ public class Jpa2Dto
         return res;
     }
 
-    private static QueueMappingDto getDTO(DeploymentParameter s)
+    static QueueMappingDto getDTO(DeploymentParameter s)
     {
         QueueMappingDto res = new QueueMappingDto();
         res.setId(s.getId());

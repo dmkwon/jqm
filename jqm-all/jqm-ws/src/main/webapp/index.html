@@ -38,46 +38,64 @@
 </head>
 
 <body>
-  <div class="container-fluid" style="padding: 3px;">
-        <ul class="nav nav-tabs" role="tablist" ng-controller="TabsCtrl">
-            <li ng-repeat="tab in tabs" ng-class="tabClass(tab)" jqm-permission="{{tab.permission}}">
-              <a href="{{tab.link}}" ng-click="setSelectedTab(tab)"><div ng-bind-html="tab.label"></div></a>
-            </li>
-            <li style="right:5px; vertical-align:center; position: absolute; height: 42px; font-style: italic; font-weight: bolder;" busy="Busy..."> </li>
-        </ul>
-        
-        <div ng-controller="AlertCtrl" ng-hide="!alert.data.userReadableMessage">
-            <alert type="danger" close="closeAlert()">
-                <div class="dl-horizontal">
-                    <dt>Error</dt>
-                    <dd>{{alert.data.userReadableMessage}}</dd>
-                </div>
-                <div class="dl-horizontal">
-                    <dt>Error code</dt>
-                    <dd>{{alert.data.errorCode}}</dd>
-                </div>
-                
-                <div class="dl-horizontal" collapse="! isCollapsed">
-                    <dt></dt>
-                    <dd><button class="btn btn-default" ng-click="toggle()">Show advanced data</button></dd>
-                </div>
-                
-                <div collapse="isCollapsed">
-                    <div class="dl-horizontal">
-                        <dt>Detailed message</dt>
-                        <dd>{{alert.data.developerMessage}}</dd>
-                    </div>
-                    <div class="dl-horizontal">
-                        <dt>Stacktrace</dt>
-                        <dd ng-bind-html="alert.data.stacktrace | j2h"/></dd>
-                    </div>
-                </div>
-            </alert>
-        </div>
-        
-        <div ng-view></div>
-        <login-dialog></login-dialog>    
-  </div>
+	<div class="container-fluid" style="padding: 3px;">
+		<ul class="nav nav-tabs" role="tablist" ng-controller="TabsCtrl">
+			<li ng-repeat="tab in tabs" ng-class="tabClass(tab)"
+				jqm-permission="{{tab.permission}}"><a href="{{tab.link}}"
+				ng-click="setSelectedTab(tab)"><div ng-bind-html="tab.label"></div></a>
+			</li>
+			<li class="dropdown"><a href="" class="dropdown-toggle"
+				data-toggle="dropdown" role="button" aria-haspopup="true"
+				aria-expanded="false">{{profile.name}} <span class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li>Choose your profile</li>
+					<li role="separator" class="divider"></li>
+					<li ng-repeat="pr in user.me.profiles"><span
+						ng-click="selectProfile(pr.id, pr.name);">{{pr.name}}</span></li>
+				</ul></li>
+			<li
+				style="right: 5px; vertical-align: center; position: absolute; height: 42px; font-style: italic; font-weight: bolder;"
+				busy="Busy..."></li>
+		</ul>
+
+
+
+		<div ng-controller="AlertCtrl"
+			ng-hide="!alert.data.userReadableMessage">
+			<alert type="danger" close="closeAlert()">
+			<div class="dl-horizontal">
+				<dt>Error</dt>
+				<dd>{{alert.data.userReadableMessage}}</dd>
+			</div>
+			<div class="dl-horizontal">
+				<dt>Error code</dt>
+				<dd>{{alert.data.errorCode}}</dd>
+			</div>
+
+			<div class="dl-horizontal" collapse="! isCollapsed">
+				<dt></dt>
+				<dd>
+					<button class="btn btn-default" ng-click="toggle()">Show
+						advanced data</button>
+				</dd>
+			</div>
+
+			<div collapse="isCollapsed">
+				<div class="dl-horizontal">
+					<dt>Detailed message</dt>
+					<dd>{{alert.data.developerMessage}}</dd>
+				</div>
+				<div class="dl-horizontal">
+					<dt>Stacktrace</dt>
+					<dd ng-bind-html="alert.data.stacktrace | j2h"></dd>
+				</div>
+			</div>
+			</alert>
+		</div>
+
+		<div ng-view></div>
+		<login-dialog></login-dialog>
+	</div>
 </body>
 
 </html>

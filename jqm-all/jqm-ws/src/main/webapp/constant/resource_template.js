@@ -2,6 +2,8 @@
 
 var jqmConstants = angular.module('jqmConstants', []);
 
+jqmConstants.value('selectedProfile', {'id': -1, 'name': 'none'});
+
 jqmConstants.value("jndiOracle", {
     name : 'jdbc/oracle',
     auth : 'CONTAINER',

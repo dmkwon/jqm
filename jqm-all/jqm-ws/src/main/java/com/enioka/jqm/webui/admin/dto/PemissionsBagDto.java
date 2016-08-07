@@ -15,16 +15,47 @@
  */
 package com.enioka.jqm.webui.admin.dto;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import com.enioka.jqm.jpamodel.RUser;
+
 @XmlRootElement
-public class PemissionsBagDto
+public class PemissionsBagDto implements Serializable
 {
-    @XmlElementWrapper(name = "permissions")
-    @XmlElement(name = "permission", type = String.class)
-    public List<String> permissions;
+    private static final long serialVersionUID = 5756796033393025919L;
+
+    @XmlElementWrapper(name = "profiles")
+    @XmlElement(name = "profile", type = PermissionsInProfileDto.class)
+    public List<PermissionsInProfileDto> profiles = new ArrayList<PermissionsInProfileDto>();
+
+    public String login, freeText;
+    public Integer id;
+
+    public PermissionsInProfileDto getProfile(Integer id)
+    {
+        for (PermissionsInProfileDto d : profiles)
+        {
+            if (d.id.equals(id))
+            {
+                return d;
+            }
+        }
+        return null;
+    }
+
+    public PemissionsBagDto(RUser u)
+    {
+        this.login = u.getLogin();
+        this.freeText = u.getFreeText();
+        this.id = u.getId();
+    }
+
+    PemissionsBagDto()
+    {}
 }
