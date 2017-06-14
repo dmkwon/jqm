@@ -113,9 +113,9 @@
 	</modules>
 
 	<scm>
-		<developerConnection>scm:git:ssh://git@github.com:enioka/jqm.git</developerConnection>
-		<connection>scm:git:https://github.com/enioka/jqm.git</connection>
-		<url>https://github.com/enioka/jqm/</url>
+		<developerConnection>scm:git:ssh://git@github.com:dmkwon/jqm.git</developerConnection>
+		<connection>scm:git:https://github.com/dmkwon/jqm.git</connection>
+		<url>https://github.com/dmkwon/jqm/</url>
 		<tag>HEAD</tag>
 	</scm>
 
