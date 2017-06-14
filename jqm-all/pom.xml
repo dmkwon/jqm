@@ -377,8 +377,7 @@
 		<repository>
 			<id>sonatype-nexus-staging</id>
 			<name>Nexus Release Repository</name>
-			<!-- <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url> -->
-			<url>scp://home/yhlee/workspace/dmkwon/</url>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 	</distributionManagement> 
 </project>
