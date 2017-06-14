@@ -358,7 +358,7 @@
 	<dependencies>
 	</dependencies>
 
-	<issueManagement>
+	<!-- <issueManagement>
 		<system>GitHub</system>
 		<url>https://github.com/enioka/jqm/issues</url>
 	</issueManagement>
@@ -379,5 +379,5 @@
 			<name>Nexus Release Repository</name>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
-	</distributionManagement>
+	</distributionManagement> -->
 </project>
